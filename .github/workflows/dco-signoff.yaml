@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2023 Jonas Tobias Hopusch <git@jotoho.de>
+# SPDX-License-Identifier: CC0-1.0
+#
+# This workflow file has been copied from the usage instructions of the Github Action and
+# then tweaked. 
+
+name: DCO Check
+
+on:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: KineticCafe/actions-dco@v1
+        with:
+          exempt-authors: git@jotoho.de
