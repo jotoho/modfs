@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2023 Jonas Tobias Hopusch <git@jotoho.de>
+# SPDX-License-Identifier: CC0-1.0
+#
+# This file lists the required experts on specific parts of the repository
+
+# If no other rule applies (additional reviewers may be manually requested)
+* @jotoho
+
