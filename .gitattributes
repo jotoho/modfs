@@ -1,0 +1,4 @@
+# SPDX-FileCopyrightText: 2023 Jonas Tobias Hopusch <git@jotoho.de>
+# SPDX-License-Identifier: CC0-1.0
+
+*.pdf filter=lfs diff=lfs merge=lfs -text
