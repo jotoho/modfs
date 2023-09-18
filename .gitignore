@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2023 Jonas Tobias Hopusch <git@jotoho.de>
+# SPDX-License-Identifier: CC0-1.0
+
+/instances
+__pycache__
+*.pyc
+.idea
