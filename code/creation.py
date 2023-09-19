@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 from pathlib import Path
 from sys import stderr
+from typing import Callable
 
 from code.mod import resolve_base_dir, select_latest_version
 
@@ -57,3 +58,25 @@ def recursive_lower_case_rename(current_path: Path) -> None:
     for element in current_path.iterdir():
         if element.is_dir():
             recursive_lower_case_rename(element)
+
+
+def ask_for_path(prompt: str, meets_requirements: Callable[[Path | None], bool]) -> Path:
+    deployment_target_dir: Path | None = None
+    first_input: bool = True
+    while deployment_target_dir is None or not meets_requirements(deployment_target_dir):
+        if first_input:
+            first_input = False
+        else:
+            print("\nYour previous input is invalid. Please try again.")
+
+        print(prompt)
+
+        try:
+            deployment_target_dir = Path(input("Path: ")).resolve()
+        except EOFError:
+            print("FATAL: User closed the standard input stream", file=stderr)
+            from os import EX_NOINPUT
+            exit(EX_NOINPUT)
+        except (TypeError, ValueError):
+            pass
+    return deployment_target_dir

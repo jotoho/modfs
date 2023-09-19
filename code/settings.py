@@ -78,7 +78,7 @@ class InstanceSettings:
     def set(self, setting: ValidInstanceSettings, value: TSetting) -> None:
         setting_file: Path = self.settingsPath / setting.setting_id
         try:
-            setting_file.write_text(data=str(value),
+            setting_file.write_text(data=str(value) + '\n',
                                     encoding='UTF-8')
         except IsADirectoryError:
             print(f"Failed to write new value to {setting.setting_id}. The target location is a "

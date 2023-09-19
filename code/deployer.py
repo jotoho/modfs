@@ -84,7 +84,7 @@ def deploy_filesystem(target_dir: Path,
 
 def stop_filesystem(target_dir: Path) -> None:
     if is_fuse_overlayfs_mounted(target_dir):
-        call(["fusermount", "-u", str(target_dir.resolve())])
+        call(["fusermount3", "-u", str(target_dir.resolve())])
     else:
         from sys import stderr
         print("Attempted to stop a filesystem that is not running", file=stderr)

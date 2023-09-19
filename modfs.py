@@ -25,7 +25,7 @@ def main() -> None:
         subcommands[args.subcommand](args)
     else:
         print(f"ERROR: No action has been implemented for subcommand {args.subcommand}.",
-              "THIS IS A BUG!", file=stderr)
+              "This is either a bug or a missing feature!", file=stderr)
         exit(1)
 
 

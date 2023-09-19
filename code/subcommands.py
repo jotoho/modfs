@@ -8,9 +8,9 @@ from shutil import copy, move, copytree
 from sys import stderr
 from typing import Callable
 
-from code.creation import create_mod_space, recursive_lower_case_rename
-from code.deployer import deploy_filesystem, stop_filesystem
-from code.mod import get_mod_ids, get_mod_versions, select_latest_version
+from code.creation import create_mod_space, recursive_lower_case_rename, ask_for_path
+from code.deployer import deploy_filesystem, stop_filesystem, are_paths_on_same_filesystem
+from code.mod import get_mod_ids, get_mod_versions, select_latest_version, validate_mod_id
 from code.settings import InstanceSettings, ValidInstanceSettings, instance_settings
 
 
@@ -71,6 +71,11 @@ def subcommand_deactivate(args: Namespace) -> None:
 
 def subcommand_import(args: Namespace) -> None:
     only_copy: bool = args.preserve_source
+    mod_id: str = args.modid
+    if not validate_mod_id(mod_id):
+        print("A mod id may only contain lower case letters a-z, digits 0-9 and the minus sign",
+              file=stderr)
+        exit(1)
     raw_destination = create_mod_space(args.modid).resolve()
     destination: Path = (raw_destination / args.subdir).resolve()
     if not destination.is_relative_to(raw_destination):
@@ -115,11 +120,34 @@ def subcommand_repair(args: Namespace) -> None:
         exit(1)
 
 
+def subcommand_init(args: Namespace) -> None:
+    from code.settings import instance_settings
+    instance_settings.initialize_settings_directory()
+    (args.instance / 'mods').mkdir(exist_ok=True, parents=True)
+
+    target_directory = ask_for_path(
+        "Please specify the directory to deploy the mods of this instance to",
+        lambda path: path.is_dir())
+
+    overflow_directory = ask_for_path(
+        "Please specify an overflow directory for modified files",
+        lambda path: path.is_dir())
+
+    work_directory = ask_for_path(
+        "Please specify a working directory on the same filesystem as the target directory",
+        lambda path: path.is_dir() and are_paths_on_same_filesystem(path, target_directory))
+
+    instance_settings.set(ValidInstanceSettings.DEPLOYMENT_TARGET_DIR, target_directory)
+    instance_settings.set(ValidInstanceSettings.FILESYSTEM_OVERFLOW_DIR, overflow_directory)
+    instance_settings.set(ValidInstanceSettings.FILESYSTEM_WORK_DIR, work_directory)
+
+
 def get_subcommands_table() -> dict[str, Callable[[Namespace], None]]:
     return {
         "list": subcommand_list,
         "activate": subcommand_activate,
         "deactivate": subcommand_deactivate,
         "import": subcommand_import,
-        "repair": subcommand_repair
+        "repair": subcommand_repair,
+        "init": subcommand_init
     }
