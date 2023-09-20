@@ -18,7 +18,8 @@ def main() -> None:
     # Warning: mod base path must be known before this can be safely called
     args = process_commandline_args()
     if args.show_args:
-        print(vars(args))
+        from pprint import pprint
+        pprint(vars(args))
 
     subcommands = get_subcommands_table()
     if args.subcommand in subcommands:
