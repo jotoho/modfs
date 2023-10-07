@@ -8,9 +8,10 @@ from shutil import copy, move, copytree
 from sys import stderr
 from typing import Callable
 
-from code.creation import create_mod_space, recursive_lower_case_rename, ask_for_path
+from code.creation import create_mod_space, recursive_lower_case_rename, ask_for_path, current_date
 from code.deployer import deploy_filesystem, stop_filesystem, are_paths_on_same_filesystem
-from code.mod import get_mod_ids, get_mod_versions, select_latest_version, validate_mod_id
+from code.mod import get_mod_ids, get_mod_versions, select_latest_version, validate_mod_id, \
+    mod_at_version_limit
 from code.settings import InstanceSettings, ValidInstanceSettings, instance_settings
 
 
@@ -76,6 +77,15 @@ def subcommand_import(args: Namespace) -> None:
         print("A mod id may only contain lower case letters a-z, digits 0-9 and the minus sign",
               file=stderr)
         exit(1)
+
+    if mod_at_version_limit(mod_id, current_date(), args.instance):
+        print("A mod may only have 100 subversions per day (00-99). Aborting import.",
+              file=stderr)
+        stderr.flush()
+        exit(1)
+    else:
+        print(f"Importing mod {mod_id}")
+
     raw_destination = create_mod_space(args.modid).resolve()
     destination: Path = (raw_destination / args.subdir).resolve()
     if not destination.is_relative_to(raw_destination):
