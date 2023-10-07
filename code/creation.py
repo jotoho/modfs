@@ -26,7 +26,7 @@ def create_mod_space(mod_id: str, base_dir: Path | None = None) -> Path:
         location.mkdir(parents=True, exist_ok=True)
         return location
     else:
-        location: Path = mod_dir / current_date() / '01'
+        location: Path = mod_dir / current_date() / '00'
         location.mkdir(parents=True, exist_ok=True)
         return location
 
