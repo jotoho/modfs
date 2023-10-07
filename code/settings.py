@@ -45,6 +45,10 @@ class ValidInstanceSettings(Enum):
                              str,
                              "./",
                              lambda val: isinstance(val, str))
+    SUPPRESS_DEVELOPER_CMD_WARNING = ("suppressDeveloperWarning",
+                                      bool,
+                                      False,
+                                      lambda val: isinstance(val, bool))
 
 
 class InstanceSettings:

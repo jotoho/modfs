@@ -2,13 +2,14 @@
 #
 # SPDX-FileCopyrightText: 2023 Jonas Tobias Hopusch <git@jotoho.de>
 # SPDX-License-Identifier: AGPL-3.0-only
+from collections import OrderedDict
 from pathlib import Path
 from subprocess import call
 
 from psutil import disk_partitions
 
 from code.mod import get_mod_mount_path
-from code.settings import InstanceSettings, ValidInstanceSettings
+from code.settings import InstanceSettings, ValidInstanceSettings, get_instance_settings
 
 
 def are_paths_on_same_filesystem(path1: Path, path2: Path) -> bool:
@@ -21,7 +22,9 @@ def are_paths_on_same_filesystem(path1: Path, path2: Path) -> bool:
     return dev1 == dev2
 
 
-def is_fuse_overlayfs_mounted(target_directory: Path) -> bool:
+def is_fuse_overlayfs_mounted(target_directory: Path | None = None) -> bool:
+    if target_directory is None:
+        target_directory = get_instance_settings().get(ValidInstanceSettings.DEPLOYMENT_TARGET_DIR)
     partitions = disk_partitions(all=True)
     for partition in partitions:
         if partition.fstype == 'fuse.fuse-overlayfs':
@@ -51,13 +54,12 @@ def get_or_create_work_dir() -> Path:
 
 
 def deploy_filesystem(target_dir: Path,
-                      mods_to_deploy: dict[str, tuple[str, str]]) -> None:
+                      mods_to_deploy: OrderedDict[str, tuple[str, str]]) -> None:
     assert target_dir is not None
     assert target_dir.is_dir()
-    mod_ids = list(reversed(sorted(mods_to_deploy.keys())))
     if not is_fuse_overlayfs_mounted(target_dir):
         mod_dirs = str(target_dir)
-        for mod in mod_ids:
+        for mod in mods_to_deploy.keys():
             date, subversion = mods_to_deploy[mod]
             mod_dir = get_mod_mount_path(mod, date, subversion)
             if mod_dir.is_dir():

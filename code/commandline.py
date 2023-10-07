@@ -97,6 +97,9 @@ def process_commandline_args() -> Namespace:
     list_subparsers.add_parser("mods",
                                formatter_class=ArgumentDefaultsHelpFormatter,
                                help="List all installed mods")
+    list_subparsers.add_parser("priority",
+                               formatter_class=ArgumentDefaultsHelpFormatter,
+                               help="List installed mods in order of increasing priority")
     list_version_parser = list_subparsers.add_parser("versions",
                                                      formatter_class=ArgumentDefaultsHelpFormatter,
                                                      help="List the mods")
@@ -109,9 +112,23 @@ def process_commandline_args() -> Namespace:
     subparsers.add_parser("useversion",
                           formatter_class=ArgumentDefaultsHelpFormatter,
                           help="Make modfs use a different version. NOT YET IMPLEMENTED")
-    subparsers.add_parser("reorder",
-                          formatter_class=ArgumentDefaultsHelpFormatter,
-                          help="Change mod priority. NOT YET IMPLEMENTED.")
+    reorder_parser = subparsers.add_parser("reorder",
+                                           formatter_class=ArgumentDefaultsHelpFormatter,
+                                           help="Change mod priority.")
+    reorder_parser.add_argument("mod_to_reorder",
+                                type=cast_validate_mod_id)
+    reorder_operation_parser = reorder_parser.add_subparsers(dest="reorder_operation",
+                                                             help="the method by which to "
+                                                                  "determine this mod's new "
+                                                                  "position")
+    reorder_operation_parser.add_parser("lowest")
+    reorder_operation_parser.add_parser("highest")
+    reorder_before = reorder_operation_parser.add_parser("before")
+    reorder_after = reorder_operation_parser.add_parser("after")
+    reorder_before.add_argument("reference_modid",
+                                type=cast_validate_mod_id)
+    reorder_after.add_argument("reference_modid",
+                               type=cast_validate_mod_id)
     repair_parser = subparsers.add_parser("repair",
                                           formatter_class=ArgumentDefaultsHelpFormatter,
                                           help="A collection of repair or maintenance features")
@@ -137,6 +154,10 @@ def process_commandline_args() -> Namespace:
                                             help="""
         List of ids of installed mods to process
     """)
+    dev_parser = subparsers.add_parser("developer")
+    dev_subparsers = dev_parser.add_subparsers(dest="developer_action")
+    dev_blank_mod = dev_subparsers.add_parser("create-blank-mod")
+    dev_blank_mod.add_argument("mod_id")
     subparsers.add_parser("help",
                           formatter_class=ArgumentDefaultsHelpFormatter,
                           help="Show this help information")

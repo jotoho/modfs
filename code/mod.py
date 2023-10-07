@@ -2,8 +2,10 @@
 #
 # SPDX-FileCopyrightText: 2023 Jonas Tobias Hopusch <git@jotoho.de>
 # SPDX-License-Identifier: AGPL-3.0-only
+from collections import OrderedDict
 from pathlib import Path
 from re import match
+from typing import Iterable
 
 base_directory: Path | None = None
 
@@ -106,3 +108,47 @@ def mod_at_version_limit(mod_id: str, version_date: str, base_dir: Path | None =
 
     subversions = get_mod_versions(mod_id, base_dir=base_dir)[version_date]
     return len(list(filter(condition_func, subversions))) > 0
+
+
+def create_mod_priority_list(base_dir: Path | None = None) -> None:
+    prio_file = resolve_base_dir(base_dir) / '.moddingoverlay' / 'priority.txt'
+    try:
+        with open(prio_file, mode='x') as f:
+            pass
+    except FileExistsError:
+        pass
+
+
+def read_mod_priority(base_dir: Path | None = None) -> OrderedDict[str, None]:
+    resolved_base_dir = resolve_base_dir(base_dir)
+    prio_file = resolved_base_dir / '.moddingoverlay' / 'priority.txt'
+    mod_order: OrderedDict[str, None] = OrderedDict()
+    try:
+        with (open(prio_file, mode='rt') as f):
+            for read_mod_id in f.readlines():
+                read_mod_id = read_mod_id.strip()
+                if (len(read_mod_id) > 0
+                        and validate_mod_id(read_mod_id)
+                        and mod_exists(read_mod_id, resolved_base_dir)):
+                    mod_order[read_mod_id] = None
+    except FileNotFoundError:
+        pass
+    for mod_id in get_mod_ids():
+        if mod_id not in mod_order.keys():
+            mod_order[mod_id] = None
+    return mod_order
+
+
+def write_mod_priority(mod_order: OrderedDict[str, None], base_dir: Path | None = None) -> None:
+    prio_file = resolve_base_dir(base_dir) / '.moddingoverlay' / 'priority.txt'
+    with open(prio_file, mode='wt') as f:
+        for mod_id in mod_order.keys():
+            f.write(mod_id + '\n')
+
+
+def build_mod_order(order_template: Iterable[str]) -> OrderedDict[str, None]:
+    final_mod_order = OrderedDict()
+    for mod in order_template:
+        if mod not in final_mod_order.keys():
+            final_mod_order[mod] = None
+    return final_mod_order
