@@ -95,4 +95,9 @@ instance_settings: InstanceSettings | None = None
 
 def set_instance_settings(setting: InstanceSettings) -> None:
     global instance_settings
-    instance_settings = setting
+    if setting is not None:
+        instance_settings = setting
+
+
+def get_instance_settings() -> InstanceSettings:
+    return instance_settings

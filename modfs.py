@@ -6,15 +6,17 @@ from pathlib import Path
 from sys import stderr
 
 from code.commandline import process_commandline_args, get_instance_path
-from code.mod import set_mod_base_path
-from code.settings import set_instance_settings, InstanceSettings
+from code.mod import set_mod_base_path, resolve_base_dir
+from code.settings import set_instance_settings, InstanceSettings, get_instance_settings
 from code.subcommands import get_subcommands_table
 
 
 def main() -> None:
     instance_path: Path = get_instance_path()
     set_mod_base_path(instance_path)
+    assert resolve_base_dir(None) is not None
     set_instance_settings(InstanceSettings(instance_path))
+    assert get_instance_settings() is not None
     # Warning: mod base path must be known before this can be safely called
     args = process_commandline_args()
     if args.show_args:
