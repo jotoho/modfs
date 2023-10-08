@@ -31,6 +31,9 @@ This project adheres to the rules of semantic versioning for naming releases.
 - Add list subcommand to show potential file conflicts between current mods
   ([1c8082a](https://github.com/jotoho/modfs/commit/1c8082ac5f6c2a2f7f27fd1d8c52e2239bdae363),
   [@jotoho](https://github.com/jotoho))
+- Add configuration subcommand for managing instance-level settings
+  ([a39444b](https://github.com/jotoho/modfs/commit/a39444b1527d7e63e01574cb122bbf8cf6a4aa37),
+  [@jotoho](https://github.com/jotoho))
 
 ### Changed
 
