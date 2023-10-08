@@ -152,3 +152,32 @@ def build_mod_order(order_template: Iterable[str]) -> OrderedDict[str, None]:
         if mod not in final_mod_order.keys():
             final_mod_order[mod] = None
     return final_mod_order
+
+
+def parse_mod_conflicts() -> dict[frozenset[str], set[Path]]:
+    mod_dirs: set[Path] = set()
+    for mod_id in get_mod_ids():
+        version_tuple = select_latest_version(mod_id)
+        if version_tuple is None:
+            continue
+        date, sub = version_tuple
+        mod_dirs.add(get_mod_mount_path(mod_id, date, sub))
+    file_mapping: dict[Path, set[str]] = dict()
+    for mod_dir in mod_dirs:
+        for found_path in mod_dir.rglob("*"):
+            if found_path.is_file():
+                found_path = found_path.relative_to(mod_dir)
+                if found_path in file_mapping.keys():
+                    file_mapping[found_path].add(mod_dir.parts[-3])
+                else:
+                    file_mapping[found_path] = {mod_dir.parts[-3]}
+    mod_mapping: dict[frozenset[str], set[Path]] = dict()
+    for path, mod_set in file_mapping.items():
+        if len(mod_set) < 2:
+            continue
+        frozen_mod_set = frozenset(mod_set)
+        if frozen_mod_set in mod_mapping.keys():
+            mod_mapping[frozen_mod_set].add(path)
+        else:
+            mod_mapping[frozen_mod_set] = {path}
+    return mod_mapping

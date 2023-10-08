@@ -13,7 +13,8 @@ from code.creation import create_mod_space, recursive_lower_case_rename, ask_for
 from code.deployer import deploy_filesystem, stop_filesystem, are_paths_on_same_filesystem, \
     is_fuse_overlayfs_mounted
 from code.mod import get_mod_ids, get_mod_versions, select_latest_version, validate_mod_id, \
-    mod_at_version_limit, write_mod_priority, read_mod_priority, build_mod_order
+    mod_at_version_limit, write_mod_priority, read_mod_priority, build_mod_order, \
+    parse_mod_conflicts
 from code.settings import InstanceSettings, ValidInstanceSettings, instance_settings, \
     get_instance_settings
 
@@ -47,6 +48,11 @@ def subcommand_list(args: Namespace) -> None:
     elif args.listtype == "priority":
         for mod_id in read_mod_priority().keys():
             print(mod_id)
+    elif args.listtype == "conflicts":
+        for mods, files in parse_mod_conflicts().items():
+            print(set(mods))
+            for file in files:
+                print((" " * 4) + str(file))
 
 
 def subcommand_activate(args: Namespace) -> None:

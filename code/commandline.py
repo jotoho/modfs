@@ -100,6 +100,9 @@ def process_commandline_args() -> Namespace:
     list_subparsers.add_parser("priority",
                                formatter_class=ArgumentDefaultsHelpFormatter,
                                help="List installed mods in order of increasing priority")
+    list_subparsers.add_parser("conflicts",
+                               formatter_class=ArgumentDefaultsHelpFormatter,
+                               help="List possible conflicts between all installed mods")
     list_version_parser = list_subparsers.add_parser("versions",
                                                      formatter_class=ArgumentDefaultsHelpFormatter,
                                                      help="List the mods")
