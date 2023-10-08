@@ -245,6 +245,44 @@ Do not use them unless you know what you're doing or are following instructions 
         print("Created directory:", create_mod_space(args.mod_id))
 
 
+def subcommand_config(args: Namespace) -> None:
+    operation: Literal["get", "set", "unset", "list"] = args.config_actions
+
+    if operation == "list":
+        for cfg in ValidInstanceSettings:
+            cfg_id = cfg.setting_id
+            if get_instance_settings().is_set(cfg):
+                print("CUSTOM: ", cfg_id)
+            else:
+                print("DEFAULT:", cfg_id)
+    elif operation in {"get", "set", "unset"}:
+        setting_id: str = args.setting_id.lower()
+        matching_settings = list(filter(lambda cfg: cfg.setting_id.startswith(setting_id),
+                                        ValidInstanceSettings))
+
+        if len(matching_settings) < 1:
+            print("setting not found", file=stderr)
+            exit(1)
+        elif len(matching_settings) > 1:
+            print("multiple matching settings", file=stderr)
+            exit(1)
+
+        setting: ValidInstanceSettings = matching_settings[0]
+
+        if operation == "get":
+            if setting_id != setting.setting_id:
+                print("warning: querying config via incomplete id may not work when using "
+                      "different versions of modfs", file=stderr)
+            print(f"{setting.setting_id} =",
+                  get_instance_settings().get(setting, force_retrieval=True))
+        elif operation == "set":
+            new_value_str: str = args.setting_val
+            new_value = setting.value_type(new_value_str)
+            get_instance_settings().set(setting, new_value)
+        elif operation == "unset":
+            get_instance_settings().unset(setting)
+
+
 def get_subcommands_table() -> dict[str, Callable[[Namespace], None]]:
     return {
         "list": subcommand_list,
@@ -256,5 +294,6 @@ def get_subcommands_table() -> dict[str, Callable[[Namespace], None]]:
         "repair": subcommand_repair,
         "init": subcommand_init,
         "reorder": subcommand_reorder,
-        "developer": subcommand_developer
+        "developer": subcommand_developer,
+        "config": subcommand_config,
     }

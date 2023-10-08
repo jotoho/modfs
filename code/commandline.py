@@ -58,16 +58,23 @@ def process_commandline_args() -> Namespace:
     config_parser = subparsers.add_parser("config",
                                           formatter_class=ArgumentDefaultsHelpFormatter,
                                           help="View or modify instance configuration")
-    config_subparsers = config_parser.add_subparsers(dest="config actions")
-    config_subparsers.add_parser("get",
+    config_subparsers = config_parser.add_subparsers(dest="config_actions")
+    config_get_parser = config_subparsers.add_parser("get",
+                                                     formatter_class=ArgumentDefaultsHelpFormatter,
+                                                     help="View configuration value(s)")
+    config_get_parser.add_argument("setting_id")
+    config_set_parser = config_subparsers.add_parser("set",
+                                                     formatter_class=ArgumentDefaultsHelpFormatter,
+                                                     help="Change a configuration value")
+    config_set_parser.add_argument("setting_id")
+    config_set_parser.add_argument("setting_val")
+    config_unset_parser = config_subparsers.add_parser("unset",
+                                                       formatter_class=ArgumentDefaultsHelpFormatter,
+                                                       help="Delete a configuration value")
+    config_subparsers.add_parser("list",
                                  formatter_class=ArgumentDefaultsHelpFormatter,
-                                 help="View configuration value(s)")
-    config_subparsers.add_parser("set",
-                                 formatter_class=ArgumentDefaultsHelpFormatter,
-                                 help="Change a configuration value")
-    config_subparsers.add_parser("unset",
-                                 formatter_class=ArgumentDefaultsHelpFormatter,
-                                 help="Delete a configuration value")
+                                 help="Show list of all valid setting ids")
+    config_unset_parser.add_argument("setting_id")
     subparsers.add_parser("status",
                           formatter_class=ArgumentDefaultsHelpFormatter,
                           help="Show statistics and other helpful information. NOT YET IMPLEMENTED")

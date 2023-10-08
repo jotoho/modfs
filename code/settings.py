@@ -58,13 +58,16 @@ class InstanceSettings:
     def initialize_settings_directory(self) -> None:
         self.settingsPath.mkdir(parents=True, exist_ok=True)
 
-    def get(self, setting: ValidInstanceSettings) -> TSetting | None:
+    def get(self, setting: ValidInstanceSettings, force_retrieval: bool = False) -> TSetting | None:
         setting_file: Path = self.settingsPath / setting.setting_id
         try:
             file_contents: str = (setting_file.read_text(encoding="UTF-8")
                                   .strip())
-            cast_value = setting.value_type(file_contents)
-            if setting.validator(cast_value):
+            cast_value = (setting.value_type(file_contents)
+                          if not (setting.value_type == bool and
+                                  file_contents == "False")
+                          else False)
+            if setting.validator(cast_value) or force_retrieval:
                 return cast_value
             else:
                 print(f"Setting value {cast_value} in {setting.setting_id} is invalid or does "
@@ -87,11 +90,34 @@ class InstanceSettings:
         except IsADirectoryError:
             print(f"Failed to write new value to {setting.setting_id}. The target location is a "
                   "directory! This damage will need to be corrected manually.", file=stderr)
+            from os import EX_IOERR
+            exit(EX_IOERR)
         except PermissionError:
             print(f"Failed to write new value to {setting.setting_id}. "
                   "Ensure that the instance directory can be written to!", file=stderr)
             from os import EX_IOERR
             exit(EX_IOERR)
+
+    def unset(self, setting: ValidInstanceSettings) -> None:
+        setting_file: Path = self.settingsPath / setting.setting_id
+        try:
+            if setting_file.is_file():
+                setting_file.unlink(missing_ok=True)
+        except IsADirectoryError:
+            print(
+                f"Failed to write new value to {setting.setting_id}. The target location is a "
+                "directory! This damage will need to be corrected manually.", file=stderr)
+            from os import EX_IOERR
+            exit(EX_IOERR)
+        except PermissionError:
+            print(f"Failed to write new value to {setting.setting_id}. "
+                  "Ensure that the instance directory can be written to!", file=stderr)
+            from os import EX_IOERR
+            exit(EX_IOERR)
+
+    def is_set(self, setting: ValidInstanceSettings) -> bool:
+        setting_file: Path = self.settingsPath / setting.setting_id
+        return setting_file.exists() and setting_file.is_file()
 
 
 instance_settings: InstanceSettings | None = None
