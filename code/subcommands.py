@@ -283,6 +283,14 @@ def subcommand_config(args: Namespace) -> None:
             get_instance_settings().unset(setting)
 
 
+def subcommand_delete(args: Namespace) -> None:
+    mod_id: str = args.mod_id
+    mod_dir: Path = args.instance / 'mods' / mod_id
+    if mod_dir.is_dir():
+        from shutil import rmtree
+        rmtree(mod_dir)
+
+
 def get_subcommands_table() -> dict[str, Callable[[Namespace], None]]:
     return {
         "list": subcommand_list,
@@ -296,4 +304,5 @@ def get_subcommands_table() -> dict[str, Callable[[Namespace], None]]:
         "reorder": subcommand_reorder,
         "developer": subcommand_developer,
         "config": subcommand_config,
+        "delete": subcommand_delete,
     }

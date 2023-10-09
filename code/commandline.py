@@ -94,9 +94,11 @@ def process_commandline_args() -> Namespace:
     import_parser.add_argument("import_path",
                                type=Path,
                                help="the source directory")
-    subparsers.add_parser("delete",
-                          formatter_class=ArgumentDefaultsHelpFormatter,
-                          help="Delete a mod or one specific version. NOT YET IMPLEMENTED.")
+    delete_parser = subparsers.add_parser("delete",
+                                          formatter_class=ArgumentDefaultsHelpFormatter,
+                                          help="Delete a mod or one specific version.")
+    delete_parser.add_argument("mod_id",
+                               type=cast_validate_mod_id)
     list_parser = subparsers.add_parser("list",
                                         formatter_class=ArgumentDefaultsHelpFormatter,
                                         help="List known resources")
