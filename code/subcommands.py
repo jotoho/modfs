@@ -44,9 +44,17 @@ def subcommand_list(args: Namespace) -> None:
                     else:
                         pri_ver_str = (' ' * len(date))
                     ver_str = "  " + pri_ver_str + '/' + subver
-                    if (date, subver) == select_latest_version(mod):
-                        ver_str += ' (latest)'
-                    print(ver_str)
+                    tags: set[str] = set()
+                    is_latest = (date, subver) == select_latest_version(mod)
+                    if is_latest:
+                        tags.add("latest")
+                    active_version = ModConfig(mod).get(ValidModSettings.MOD_VERSION)
+                    is_active = ((date, subver) == parse_version_tag(active_version)
+                                 if active_version != "latest"
+                                 else is_latest)
+                    if is_active:
+                        tags.add("active")
+                    print(ver_str, *tags)
     elif args.listtype == "priority":
         for mod_id in read_mod_priority().keys():
             print(mod_id)
