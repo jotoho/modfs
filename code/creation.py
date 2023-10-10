@@ -3,6 +3,10 @@
 # SPDX-FileCopyrightText: 2023 Jonas Tobias Hopusch <git@jotoho.de>
 # SPDX-License-Identifier: AGPL-3.0-only
 from pathlib import Path
+from pprint import pprint
+from re import IGNORECASE, compile, Pattern
+from shutil import copy, copytree, move, which
+from subprocess import run
 from sys import stderr
 from typing import Callable
 
@@ -76,3 +80,45 @@ def ask_for_path(prompt: str, meets_requirements: Callable[[Path | None], bool])
         except (TypeError, ValueError):
             pass
     return deployment_target_dir
+
+
+def transfer_mod_files(source_dir: Path, destination_dir: Path, only_copy: bool) -> None:
+    for file_or_directory in source_dir.iterdir():
+        if only_copy:
+            if file_or_directory.is_file():
+                copy(file_or_directory, destination_dir)
+            elif file_or_directory.is_dir():
+                copytree(file_or_directory, destination_dir)
+            else:
+                print(f"Unrecognized type, neither file nor directory: {str(file_or_directory)}",
+                      file=stderr)
+        else:
+            move(file_or_directory, destination_dir)
+
+
+def extract_archive(archive_file: Path, destination_dir: Path) -> None:
+    extract_commands: dict[Pattern, Callable[[Path, Path], list[str]]] = {
+        compile(r".tar(\.[a-z]+){,1}$", flags=IGNORECASE): (lambda a, d: ["tar", "-x",
+                                                                          "-f", str(a),
+                                                                          f"--one-top-level={d}"]),
+        compile(r".zip$", flags=IGNORECASE): (lambda a, d: ["unzip", "-d", str(d), str(a)]),
+        compile(r".rar$", flags=IGNORECASE): (lambda a, d: ["unrar", "x", str(a), str(d)]),
+        compile(r".7z$", flags=IGNORECASE): (lambda a, d: ["7z", f"-o{d}", str(a)]),
+    }
+
+    def filter_commands(key: Pattern) -> bool:
+        return key.search(archive_file.parts[-1]) is not None
+
+    if len(set(destination_dir.iterdir())) != 0:
+        ValueError("destination directory is not empty")
+
+    matching_commands = list(filter(filter_commands, extract_commands.keys()))
+
+    if len(matching_commands) < 1:
+        raise ValueError(f"Archive file type of '{archive_file}' is not supported")
+
+    command = extract_commands[matching_commands[0]](archive_file, destination_dir)
+    if which(command[0]) is not None:
+        run(command)
+    else:
+        raise f"extraction dependency {command[0]} is not installed"
