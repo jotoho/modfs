@@ -6,6 +6,8 @@
 from enum import Enum
 from pathlib import Path
 from typing import Callable, TypeVar, Type, Any, Iterable
+from urllib.parse import urlparse
+
 from code.mod import validate_mod_id, mod_exists, resolve_base_dir
 from re import match, IGNORECASE, NOFLAG, search
 
@@ -42,6 +44,14 @@ class ValidModSettings(Enum):
         lambda s: match(r"^((latest)|([0-9]{4,}-[0-9]{2}-[0-9]{2}/[0-9]{2}))$", s) is not None,
     })
     NOTES = ("custom_notes", str, "", {})
+    HYPERLINK = ("link", str, "", {
+        lambda url: url == "" or urlparse(url).params == "",
+        lambda url: url == "" or urlparse(url).query == "",
+        lambda url: url == "" or urlparse(url).fragment == "",
+        lambda url: url == "" or urlparse(url).scheme in {"https", "http"},
+        lambda url: url == "" or match(r"^[\s]+", url, NOFLAG) is None,
+        lambda url: url == "" or search(r"[\s]+$", url, NOFLAG) is None,
+    })
 
 
 def default_mod_settings() -> dict[str, Any]:
@@ -52,7 +62,11 @@ ReqVal = TypeVar("ReqVal")
 
 
 def meets_requirements(value: ReqVal, conditions: Iterable[Callable[[ReqVal], bool]]) -> bool:
-    return all((fn(value) for fn in conditions))
+    try:
+        return all((fn(value) for fn in conditions))
+    except ValueError:
+        # Crashing tests count as failed
+        return False
 
 
 class ModConfig:

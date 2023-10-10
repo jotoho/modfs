@@ -376,6 +376,8 @@ def subcommand_mod(args: Namespace) -> None:
             cfg.set(ValidModSettings.PRETTY_NAME, value)
         elif attribute == "note":
             cfg.set(ValidModSettings.NOTES, value)
+        elif attribute == "link":
+            cfg.set(ValidModSettings.HYPERLINK, value)
         else:
             print("mod attribute not recognized. no modifications were made.")
             exit(1)
@@ -385,6 +387,9 @@ def subcommand_mod(args: Namespace) -> None:
         print(f"Name:\t{cfg_name if len(cfg_name) > 0 else mod_id}")
         cfg_author: str = cfg.get(ValidModSettings.AUTHOR)
         print(f"Author:\t{cfg_author if len(cfg_author) > 0 else 'unknown'}")
+        cfg_link: str = cfg.get(ValidModSettings.HYPERLINK)
+        if len(cfg_link) > 0:
+            print(f"Link:\t{cfg_link}")
         print(f"Status:\t" + "Enabled" if cfg.get(ValidModSettings.ENABLED) else "Disabled")
         latest_version = select_latest_version(mod_id)
         printed_active_ver: bool = False
