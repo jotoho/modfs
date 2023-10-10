@@ -36,7 +36,7 @@ def process_commandline_args() -> Namespace:
     parser.add_argument("--show-args",
                         action="store_true",
                         help="Prints the evaluated CLI object to stdout for debugging")
-    subparsers = parser.add_subparsers(dest="subcommand")
+    subparsers = parser.add_subparsers(dest="subcommand", required=True)
     init_parser = subparsers.add_parser("init",
                                         formatter_class=ArgumentDefaultsHelpFormatter,
                                         help="Initializes new instance directory")
@@ -64,7 +64,7 @@ def process_commandline_args() -> Namespace:
     config_parser = subparsers.add_parser("config",
                                           formatter_class=ArgumentDefaultsHelpFormatter,
                                           help="View or modify instance configuration")
-    config_subparsers = config_parser.add_subparsers(dest="config_actions")
+    config_subparsers = config_parser.add_subparsers(dest="config_actions", required=True)
     config_get_parser = config_subparsers.add_parser("get",
                                                      formatter_class=ArgumentDefaultsHelpFormatter,
                                                      help="View configuration value(s)")
@@ -108,7 +108,7 @@ def process_commandline_args() -> Namespace:
     list_parser = subparsers.add_parser("list",
                                         formatter_class=ArgumentDefaultsHelpFormatter,
                                         help="List known resources")
-    list_subparsers = list_parser.add_subparsers(dest="listtype")
+    list_subparsers = list_parser.add_subparsers(dest="listtype", required=True)
     list_subparsers.add_parser("mods",
                                formatter_class=ArgumentDefaultsHelpFormatter,
                                help="List all installed mods")
@@ -141,7 +141,7 @@ def process_commandline_args() -> Namespace:
     reorder_operation_parser = reorder_parser.add_subparsers(dest="reorder_operation",
                                                              help="the method by which to "
                                                                   "determine this mod's new "
-                                                                  "position")
+                                                                  "position", required=True)
     reorder_operation_parser.add_parser("lowest")
     reorder_operation_parser.add_parser("highest")
     reorder_before = reorder_operation_parser.add_parser("before")
@@ -153,7 +153,7 @@ def process_commandline_args() -> Namespace:
     repair_parser = subparsers.add_parser("repair",
                                           formatter_class=ArgumentDefaultsHelpFormatter,
                                           help="A collection of repair or maintenance features")
-    repair_subparser = repair_parser.add_subparsers(dest="repairaction")
+    repair_subparser = repair_parser.add_subparsers(dest="repairaction", required=True)
     repair_subparser.add_parser("filepriority",
                                 formatter_class=ArgumentDefaultsHelpFormatter)
     repair_filenamecase_parser = repair_subparser.add_parser("filenamecase",
@@ -176,7 +176,7 @@ def process_commandline_args() -> Namespace:
         List of ids of installed mods to process
     """)
     dev_parser = subparsers.add_parser("developer")
-    dev_subparsers = dev_parser.add_subparsers(dest="developer_action")
+    dev_subparsers = dev_parser.add_subparsers(dest="developer_action", required=True)
     dev_blank_mod = dev_subparsers.add_parser("create-blank-mod")
     dev_blank_mod.add_argument("mod_id")
     mod_parser = subparsers.add_parser("mod")
