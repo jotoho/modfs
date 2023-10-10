@@ -7,11 +7,7 @@ from sys import stderr
 from typing import Callable
 
 from code.mod import resolve_base_dir, select_latest_version
-
-
-def current_date() -> str:
-    from datetime import date
-    return date.today().isoformat()
+from code.tools import current_date
 
 
 def create_mod_space(mod_id: str, base_dir: Path | None = None) -> Path:

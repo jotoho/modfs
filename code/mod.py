@@ -4,8 +4,11 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 from collections import OrderedDict
 from pathlib import Path
-from re import match
+from re import match, fullmatch
+from sys import stderr
 from typing import Iterable
+
+from code.tools import current_date
 
 base_directory: Path | None = None
 
@@ -71,6 +74,35 @@ def has_subversion(mod_id: str,
                    date_version: str) -> bool:
     subversions = get_mod_versions(mod_id).get(date_version)
     return subversions is not None and len(subversions) > 0
+
+
+def version_exists(mod_id: str,
+                   date_version: str,
+                   subversion: int | str,
+                   base_dir: Path | None = None) -> bool:
+    base_dir = resolve_base_dir(base_dir)
+    subversion = subversion if isinstance(subversion, str) else str(subversion).zfill(2)
+    version_dir = base_dir / 'mods' / mod_id / date_version / subversion
+    return version_dir.is_dir()
+
+
+def parse_version_tag(version_tag: str) -> tuple[str, str]:
+    if fullmatch("^([0-9]{4,}-[0-9]{2}-[0-9]{2}/)?[0-9]{2}/?$", version_tag) is None:
+        print("Invalid version tag. Versions need to either be a number representing today's "
+              "subversion or in the format "
+              "YYYY-MM-DD/XX with XX representing the subversion", file=stderr)
+        exit(1)
+
+    if fullmatch("^[0-9]{4,}-[0-9]{2}-[0-9]{2}/[0-9]{1,2}/?$", version_tag) is not None:
+        version_date = match("[0-9]{4,}-[0-9]{2}-[0-9]{2}", version_tag).group(0)
+        version_subversion = str(int(version_tag.split('/')[1])).zfill(2)
+        return version_date, version_subversion
+    elif fullmatch("^[0-9]{1,2}/?$", version_tag) is not None:
+        version_date: str = current_date()
+        version_subversion = str(int(version_tag)).zfill(2)
+        return version_date, version_subversion
+    else:
+        raise ValueError(f"Error parsing version string {version_tag}")
 
 
 def select_latest_version(mod_id: str,

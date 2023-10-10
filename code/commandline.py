@@ -127,9 +127,12 @@ def process_commandline_args() -> Namespace:
                                      nargs='*',
                                      default=[],
                                      type=cast_validate_mod_id)
-    subparsers.add_parser("useversion",
-                          formatter_class=ArgumentDefaultsHelpFormatter,
-                          help="Make modfs use a different version. NOT YET IMPLEMENTED")
+    version_select_parser = subparsers.add_parser("useversion",
+                                                  formatter_class=ArgumentDefaultsHelpFormatter,
+                                                  help="Make modfs use a different version.")
+    version_select_parser.add_argument("mod_id",
+                                       type=cast_validate_mod_id)
+    version_select_parser.add_argument("version")
     reorder_parser = subparsers.add_parser("reorder",
                                            formatter_class=ArgumentDefaultsHelpFormatter,
                                            help="Change mod priority.")

@@ -10,14 +10,15 @@ from sys import stderr
 from typing import Callable, Literal
 
 from code.config_mod import mod_change_activation, ModConfig, ValidModSettings
-from code.creation import create_mod_space, recursive_lower_case_rename, ask_for_path, current_date
+from code.creation import create_mod_space, recursive_lower_case_rename, ask_for_path
 from code.deployer import deploy_filesystem, stop_filesystem, are_paths_on_same_filesystem, \
     is_fuse_overlayfs_mounted
 from code.mod import get_mod_ids, get_mod_versions, select_latest_version, validate_mod_id, \
     mod_at_version_limit, write_mod_priority, read_mod_priority, build_mod_order, \
-    parse_mod_conflicts
+    parse_mod_conflicts, version_exists, parse_version_tag
 from code.settings import InstanceSettings, ValidInstanceSettings, instance_settings, \
     get_instance_settings
+from code.tools import current_date
 
 
 def subcommand_list(args: Namespace) -> None:
@@ -69,7 +70,11 @@ def subcommand_activate(args: Namespace) -> None:
     for mod in read_mod_priority().keys():
         if not ModConfig(mod, args.instance).get(ValidModSettings.ENABLED):
             continue
-        version_to_use = select_latest_version(mod)
+        version_conf: str = ModConfig(mod).get(ValidModSettings.MOD_VERSION)
+        if version_conf.lower() == "latest":
+            version_to_use = select_latest_version(mod)
+        else:
+            version_to_use = parse_version_tag(version_conf)
         if version_to_use is None:
             continue
         mods_to_deploy[mod] = version_to_use
@@ -332,6 +337,27 @@ def subcommand_disable(args: Namespace) -> None:
     mod_change_activation(args.mod_id, False, base_dir=args.instance)
 
 
+def subcommand_useversion(args: Namespace) -> None:
+    mod_id: str = args.mod_id
+    version_str: str = args.version
+
+    try:
+        if version_str == "latest":
+            ModConfig(mod_id).set(ValidModSettings.MOD_VERSION, "latest")
+        else:
+            version_date, version_subversion = parse_version_tag(version_str)
+
+            if version_exists(mod_id, version_date, version_subversion):
+                ModConfig(mod_id).set(ValidModSettings.MOD_VERSION,
+                                      f"{version_date}/{version_subversion}")
+            else:
+                print(f"Version {version_str} does not exist!", file=stderr)
+                exit(1)
+    except ValueError as e:
+        print(e, file=stderr)
+        exit(1)
+
+
 def get_subcommands_table() -> dict[str, Callable[[Namespace], None]]:
     return {
         "list": subcommand_list,
@@ -349,4 +375,5 @@ def get_subcommands_table() -> dict[str, Callable[[Namespace], None]]:
         "delete": subcommand_delete,
         "enable": subcommand_enable,
         "disable": subcommand_disable,
+        "useversion": subcommand_useversion,
     }
