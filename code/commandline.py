@@ -55,6 +55,12 @@ def process_commandline_args() -> Namespace:
                           aliases=["off"],
                           formatter_class=ArgumentDefaultsHelpFormatter,
                           help="Stop filesystem deployment")
+    enable_parser = subparsers.add_parser("enable")
+    enable_parser.add_argument("mod_id",
+                               type=cast_validate_mod_id)
+    disable_parser = subparsers.add_parser("disable")
+    disable_parser.add_argument("mod_id",
+                                type=cast_validate_mod_id)
     config_parser = subparsers.add_parser("config",
                                           formatter_class=ArgumentDefaultsHelpFormatter,
                                           help="View or modify instance configuration")

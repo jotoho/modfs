@@ -9,6 +9,7 @@ from shutil import copy, move, copytree
 from sys import stderr
 from typing import Callable, Literal
 
+from code.config_mod import mod_change_activation, ModConfig, ValidModSettings
 from code.creation import create_mod_space, recursive_lower_case_rename, ask_for_path, current_date
 from code.deployer import deploy_filesystem, stop_filesystem, are_paths_on_same_filesystem, \
     is_fuse_overlayfs_mounted
@@ -66,6 +67,8 @@ def subcommand_activate(args: Namespace) -> None:
         exit(1)
     mods_to_deploy: OrderedDict[str, tuple[str, str]] = OrderedDict()
     for mod in read_mod_priority().keys():
+        if not ModConfig(mod, args.instance).get(ValidModSettings.ENABLED):
+            continue
         version_to_use = select_latest_version(mod)
         if version_to_use is None:
             continue
@@ -291,6 +294,14 @@ def subcommand_delete(args: Namespace) -> None:
         rmtree(mod_dir)
 
 
+def subcommand_enable(args: Namespace) -> None:
+    mod_change_activation(args.mod_id, True, base_dir=args.instance)
+
+
+def subcommand_disable(args: Namespace) -> None:
+    mod_change_activation(args.mod_id, False, base_dir=args.instance)
+
+
 def get_subcommands_table() -> dict[str, Callable[[Namespace], None]]:
     return {
         "list": subcommand_list,
@@ -305,4 +316,6 @@ def get_subcommands_table() -> dict[str, Callable[[Namespace], None]]:
         "developer": subcommand_developer,
         "config": subcommand_config,
         "delete": subcommand_delete,
+        "enable": subcommand_enable,
+        "disable": subcommand_disable,
     }
