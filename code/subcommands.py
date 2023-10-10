@@ -244,12 +244,23 @@ Do not use them unless you know what you're doing or are following instructions 
     """.strip())
 
     action: str | None = args.developer_action
-    if action == "create-blank-mod":
+    if action is None:
+        print("developer subcommand is missing. see --help for details", file=stderr)
+    elif action == "create-blank-mod":
         print("Created directory:", create_mod_space(args.mod_id))
 
 
 def subcommand_config(args: Namespace) -> None:
+    valid_operations = frozenset({
+        "get",
+        "set",
+        "unset",
+        "list",
+    })
     operation: Literal["get", "set", "unset", "list"] = args.config_actions
+    if operation is None or operation not in valid_operations:
+        print("Invalid config operation", file=stderr)
+        exit(1)
 
     if operation == "list":
         for cfg in ValidInstanceSettings:
@@ -260,8 +271,9 @@ def subcommand_config(args: Namespace) -> None:
                 print("DEFAULT:", cfg_id)
     elif operation in {"get", "set", "unset"}:
         setting_id: str = args.setting_id.lower()
-        matching_settings = list(filter(lambda cfg: cfg.setting_id.startswith(setting_id),
-                                        ValidInstanceSettings))
+        matching_settings = list(filter(
+            lambda cfg: cfg.setting_id.lower().startswith(setting_id.lower()),
+            ValidInstanceSettings))
 
         if len(matching_settings) < 1:
             print("setting not found", file=stderr)
@@ -273,16 +285,22 @@ def subcommand_config(args: Namespace) -> None:
         setting: ValidInstanceSettings = matching_settings[0]
 
         if operation == "get":
-            if setting_id != setting.setting_id:
+            if setting_id.lower() != setting.setting_id.lower():
                 print("warning: querying config via incomplete id may not work when using "
                       "different versions of modfs", file=stderr)
-            print(f"{setting.setting_id} =",
+            print(setting.setting_id, "=",
                   get_instance_settings().get(setting, force_retrieval=True))
         elif operation == "set":
+            if setting_id.lower() != setting.setting_id.lower():
+                print("warning: setting config via incomplete id may not work when using "
+                      "different versions of modfs", file=stderr)
             new_value_str: str = args.setting_val
             new_value = setting.value_type(new_value_str)
             get_instance_settings().set(setting, new_value)
         elif operation == "unset":
+            if setting_id.lower() != setting.setting_id.lower():
+                print("warning: unsetting config via incomplete id may not work when using "
+                      "different versions of modfs", file=stderr)
             get_instance_settings().unset(setting)
 
 
