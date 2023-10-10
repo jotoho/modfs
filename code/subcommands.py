@@ -137,7 +137,8 @@ def subcommand_import(args: Namespace) -> None:
             extract_archive(source, tmpdir)
             if len(set(tmpdir.iterdir())) == 0:
                 raise "Extraction of archive failed. No files in extraction destination."
-            source_subdirs = list(tmpdir.rglob(f"**/{args.subdir}"))
+            source_subdirs: list[Path] = list(filter(lambda p: p.is_dir(),
+                                                     tmpdir.rglob(f"**/{args.subdir}")))
             if len(source_subdirs) == 0:
                 transfer_mod_files(tmpdir, destination, only_copy=False)
             elif len(source_subdirs) == 1:
