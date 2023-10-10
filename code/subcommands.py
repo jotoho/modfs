@@ -7,10 +7,12 @@ from collections import OrderedDict
 from pathlib import Path
 from shutil import copy, move, copytree
 from sys import stderr
+from tempfile import TemporaryDirectory
 from typing import Callable, Literal
 
 from code.config_mod import mod_change_activation, ModConfig, ValidModSettings
-from code.creation import create_mod_space, recursive_lower_case_rename, ask_for_path
+from code.creation import create_mod_space, recursive_lower_case_rename, ask_for_path, \
+    transfer_mod_files, extract_archive
 from code.deployer import deploy_filesystem, stop_filesystem, are_paths_on_same_filesystem, \
     is_fuse_overlayfs_mounted
 from code.mod import get_mod_ids, get_mod_versions, select_latest_version, validate_mod_id, \
@@ -126,21 +128,39 @@ def subcommand_import(args: Namespace) -> None:
         exit(1)
     destination.mkdir(parents=True, exist_ok=True)
     source: Path = args.import_path
-    if not source.is_dir():
-        print("Source isn't a directory", file=stderr)
-        exit(1)
-    for file_or_directory in source.iterdir():
-        if only_copy:
-            if file_or_directory.is_file():
-                copy(file_or_directory, destination)
-            elif file_or_directory.is_dir():
-                copytree(file_or_directory, destination)
+
+    if source.is_dir():
+        transfer_mod_files(source, destination, only_copy)
+    elif source.is_file():
+        with TemporaryDirectory() as tmpdir_str:
+            tmpdir = Path(tmpdir_str)
+            extract_archive(source, tmpdir)
+            if len(set(tmpdir.iterdir())) == 0:
+                raise "Extraction of archive failed. No files in extraction destination."
+            source_subdirs = list(tmpdir.rglob(f"**/{args.subdir}"))
+            if len(source_subdirs) == 0:
+                transfer_mod_files(tmpdir, destination, only_copy=False)
+            elif len(source_subdirs) == 1:
+                transfer_mod_files(source_subdirs[0], destination, only_copy=False)
             else:
-                print(f"Unrecognized type, neither file nor directory: {str(file_or_directory)}",
-                      file=stderr)
-        else:
-            move(file_or_directory, destination)
+                raise ("Multiple candidates for source within archive. You must prepare these "
+                       "files manually.")
+    else:
+        print("internal logic error: source is neither file nor directory", file=stderr)
+        exit(1)
     recursive_lower_case_rename(raw_destination)
+
+    cfg = ModConfig(mod_id)
+    author: str | None = args.set_author
+    if author is not None:
+        cfg.set(ValidModSettings.AUTHOR, author)
+    name: str | None = args.set_name
+    if name is not None:
+        cfg.set(ValidModSettings.PRETTY_NAME, name)
+    link: str | None = args.set_link
+    if link is not None:
+        cfg.set(ValidModSettings.HYPERLINK, link)
+
 
 
 def subcommand_repair(args: Namespace) -> None:

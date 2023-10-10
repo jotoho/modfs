@@ -95,6 +95,15 @@ def process_commandline_args() -> Namespace:
                                default=(InstanceSettings(get_instance_path()).get(
                                    ValidInstanceSettings.DEFAULT_MOD_SUBFOLDER)),
                                help="The subfolder of the new mod to install these contents into")
+    import_parser.add_argument("--set-author",
+                               type=str,
+                               default=None)
+    import_parser.add_argument("--set-name",
+                               type=str,
+                               default=None)
+    import_parser.add_argument("--set-link",
+                               type=str,
+                               default=None)
     import_parser.add_argument("modid",
                                type=str)
     import_parser.add_argument("import_path",
