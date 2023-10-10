@@ -358,6 +358,52 @@ def subcommand_useversion(args: Namespace) -> None:
         exit(1)
 
 
+def subcommand_mod(args: Namespace) -> None:
+    mod_id: str = args.mod_id
+    action: str | None = args.mod_action
+    if action is None:
+        print("You must specify an action to take with the given mod",
+              file=stderr)
+        exit(1)
+
+    cfg = ModConfig(mod_id)
+    if action == "set":
+        attribute: str = args.attribute
+        value: str = args.value
+        if attribute == "author":
+            cfg.set(ValidModSettings.AUTHOR, value)
+        elif attribute == "name":
+            cfg.set(ValidModSettings.PRETTY_NAME, value)
+        elif attribute == "note":
+            cfg.set(ValidModSettings.NOTES, value)
+        else:
+            print("mod attribute not recognized. no modifications were made.")
+            exit(1)
+    elif action == "info":
+        print(f"Retrieving data on {mod_id}...")
+        cfg_name: str = cfg.get(ValidModSettings.PRETTY_NAME)
+        print(f"Name:\t{cfg_name if len(cfg_name) > 0 else mod_id}")
+        cfg_author: str = cfg.get(ValidModSettings.AUTHOR)
+        print(f"Author:\t{cfg_author if len(cfg_author) > 0 else 'unknown'}")
+        print(f"Status:\t" + "Enabled" if cfg.get(ValidModSettings.ENABLED) else "Disabled")
+        latest_version = select_latest_version(mod_id)
+        printed_active_ver: bool = False
+        if latest_version is not None:
+            latest_date, latest_sub = latest_version
+            print(f"Latest version: {latest_date}/{latest_sub}")
+            cfg_version = cfg.get(ValidModSettings.MOD_VERSION)
+            if cfg_version.lower() == "latest":
+                print(f"Active version: {latest_date}/{latest_sub}")
+            else:
+                active_date, active_sub = parse_version_tag(cfg_version)
+                print(f"Active version: {active_date}/{active_sub}")
+        cfg_notes: str = cfg.get(ValidModSettings.NOTES)
+        if len(cfg_notes) > 0:
+            from textwrap import indent
+            print("User notes:")
+            print(indent(cfg_notes, " " * 2))
+
+
 def get_subcommands_table() -> dict[str, Callable[[Namespace], None]]:
     return {
         "list": subcommand_list,
@@ -376,4 +422,5 @@ def get_subcommands_table() -> dict[str, Callable[[Namespace], None]]:
         "enable": subcommand_enable,
         "disable": subcommand_disable,
         "useversion": subcommand_useversion,
+        "mod": subcommand_mod,
     }

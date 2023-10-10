@@ -41,6 +41,7 @@ class ValidModSettings(Enum):
     MOD_VERSION = ("use_mod_version", str, "latest", {
         lambda s: match(r"^((latest)|([0-9]{4,}-[0-9]{2}-[0-9]{2}/[0-9]{2}))$", s) is not None,
     })
+    NOTES = ("custom_notes", str, "", {})
 
 
 def default_mod_settings() -> dict[str, Any]:

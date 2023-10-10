@@ -179,6 +179,13 @@ def process_commandline_args() -> Namespace:
     dev_subparsers = dev_parser.add_subparsers(dest="developer_action")
     dev_blank_mod = dev_subparsers.add_parser("create-blank-mod")
     dev_blank_mod.add_argument("mod_id")
+    mod_parser = subparsers.add_parser("mod")
+    mod_parser.add_argument("mod_id")
+    mod_action_parsers = mod_parser.add_subparsers(dest="mod_action", required=True)
+    mod_set_parser = mod_action_parsers.add_parser("set")
+    mod_set_parser.add_argument("attribute", choices={"author", "name", "note"})
+    mod_set_parser.add_argument("value")
+    mod_action_parsers.add_parser("info")
     subparsers.add_parser("help",
                           formatter_class=ArgumentDefaultsHelpFormatter,
                           help="Show this help information")
