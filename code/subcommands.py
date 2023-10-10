@@ -250,6 +250,18 @@ Do not use them unless you know what you're doing or are following instructions 
         print("Created directory:", create_mod_space(args.mod_id))
 
 
+def subcommand_status(args: Namespace) -> None:
+    target_dir_setting = ValidInstanceSettings.DEPLOYMENT_TARGET_DIR
+    assert target_dir_setting.value_type == Path
+    target_dir: Path | None = get_instance_settings().get(target_dir_setting)
+
+    if target_dir is None:
+        print("target directory is unknown")
+    elif is_fuse_overlayfs_mounted(target_dir):
+        print("filesystem is active on path " + str(target_dir))
+    else:
+        print("filesystem is not active")
+
 def subcommand_config(args: Namespace) -> None:
     valid_operations = frozenset({
         "get",
@@ -327,6 +339,7 @@ def get_subcommands_table() -> dict[str, Callable[[Namespace], None]]:
         "on": subcommand_activate,
         "deactivate": subcommand_deactivate,
         "off": subcommand_deactivate,
+        "status": subcommand_status,
         "import": subcommand_import,
         "repair": subcommand_repair,
         "init": subcommand_init,
