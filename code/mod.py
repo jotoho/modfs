@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 from collections import OrderedDict
 from pathlib import Path
-from re import match, fullmatch
+from re import match, fullmatch, search
 from sys import stderr
 from typing import Iterable
 
@@ -136,7 +136,10 @@ def get_mod_mount_path(mod_id: str, version_date: str, version_sub: str) -> Path
 
 def mod_at_version_limit(mod_id: str, version_date: str, base_dir: Path | None = None) -> bool:
     def condition_func(s: str) -> bool:
-        return (match('[^0-9]', s) is None) and int(s) >= 99
+        return (search('[^0-9]', s) is None) and int(s) >= 99
+
+    if not mod_exists(mod_id, base_dir=base_dir):
+        return False
 
     subversions = get_mod_versions(mod_id, base_dir=base_dir)[version_date]
     return len(list(filter(condition_func, subversions))) > 0
