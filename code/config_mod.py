@@ -7,7 +7,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Callable, TypeVar, Type, Any, Iterable
 from code.mod import validate_mod_id, mod_exists, resolve_base_dir
-from re import match, IGNORECASE, NOFLAG
+from re import match, IGNORECASE, NOFLAG, search
 
 TSetting = TypeVar("TSetting")
 
@@ -31,12 +31,12 @@ class ValidModSettings(Enum):
     PRETTY_NAME = ("pretty_name", str, "", {
         lambda s: match(r"^[a-z0-9\- ]*$", s, IGNORECASE) is not None,
         lambda s: match(r"^[\s]+", s, NOFLAG) is None,
-        lambda s: match(r"[\s]+$", s, NOFLAG) is None,
+        lambda s: search(r"[\s]+$", s, NOFLAG) is None,
     })
     AUTHOR = ("author", str, "", {
         lambda s: match(r"^[a-z0-9 ]*$", s, IGNORECASE) is not None,
         lambda s: match(r"^[\s]+", s, NOFLAG) is None,
-        lambda s: match(r"[\s]+$", s, NOFLAG) is None,
+        lambda s: search(r"[\s]+$", s, NOFLAG) is None,
     })
     MOD_VERSION = ("use_mod_version", str, "latest", {
         lambda s: match(r"^((latest)|([0-9]{4,}-[0-9]{2}-[0-9]{2}/[0-9]{2}))$", s) is not None,
