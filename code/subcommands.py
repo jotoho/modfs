@@ -150,6 +150,18 @@ def subcommand_import(args: Namespace) -> None:
         exit(1)
     recursive_lower_case_rename(raw_destination)
 
+    cfg = ModConfig(mod_id)
+    author: str | None = args.set_author
+    if author is not None:
+        cfg.set(ValidModSettings.AUTHOR, author)
+    name: str | None = args.set_name
+    if name is not None:
+        cfg.set(ValidModSettings.PRETTY_NAME, name)
+    link: str | None = args.set_link
+    if link is not None:
+        cfg.set(ValidModSettings.HYPERLINK, link)
+
+
 
 def subcommand_repair(args: Namespace) -> None:
     if args.repairaction == "filenamecase":
