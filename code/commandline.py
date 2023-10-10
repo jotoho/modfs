@@ -83,7 +83,7 @@ def process_commandline_args() -> Namespace:
     config_unset_parser.add_argument("setting_id")
     subparsers.add_parser("status",
                           formatter_class=ArgumentDefaultsHelpFormatter,
-                          help="Show statistics and other helpful information. NOT YET IMPLEMENTED")
+                          help="Show statistics and other helpful information.")
     import_parser = subparsers.add_parser("import",
                                           help="Import a foreign directory as a mod",
                                           formatter_class=ArgumentDefaultsHelpFormatter)
