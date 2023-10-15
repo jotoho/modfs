@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 from collections import OrderedDict
 from enum import Enum
+from filecmp import cmp
+from functools import reduce
 from pathlib import Path
 from re import match, fullmatch, search, IGNORECASE, NOFLAG
 from sys import stderr
@@ -205,6 +207,29 @@ def is_mod_active(mod_id: str, base_dir: Path | None = None) -> bool:
     return ModConfig(mod_id, resolve_base_dir(base_dir)).get(ValidModSettings.ENABLED)
 
 
+def remove_harmless_conflicts(mapping: dict[frozenset[str], set[Path]]) \
+        -> dict[frozenset[str], set[Path]]:
+    for mods, file_patterns in mapping.items():
+        mod_dirs: set[Path] = set()
+        for mod in mods:
+            date, subversion = select_active_version(mod)
+            mod_dirs.add(resolve_base_dir() / 'mods' / mod / date / subversion)
+
+        def identical_files(path1: Path | None, path2: Path) -> Path | None:
+            if path1 is not None and cmp(path1, path2, shallow=False):
+                return path1
+            else:
+                return None
+
+        def pattern_filter(pattern: Path) -> bool:
+            return reduce(identical_files, {mod_dir / pattern for mod_dir in mod_dirs}) is not None
+
+        for former_pattern in set(filter(pattern_filter, file_patterns)):
+            file_patterns.remove(former_pattern)
+
+    return dict(filter(lambda t: len(t[1]) > 0, mapping.items()))
+
+
 def parse_mod_conflicts() -> dict[frozenset[str], set[Path]]:
     mod_dirs: set[Path] = set()
     for mod_id in get_mod_ids():
@@ -233,7 +258,8 @@ def parse_mod_conflicts() -> dict[frozenset[str], set[Path]]:
             mod_mapping[frozen_mod_set].add(path)
         else:
             mod_mapping[frozen_mod_set] = {path}
-    return mod_mapping
+    return remove_harmless_conflicts(mod_mapping)
+
 
 TSetting = TypeVar("TSetting")
 
