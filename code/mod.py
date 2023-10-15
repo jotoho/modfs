@@ -8,6 +8,7 @@ from re import match, fullmatch, search
 from sys import stderr
 from typing import Iterable
 
+from code.paths import get_meta_directory
 from code.tools import current_date
 
 base_directory: Path | None = None
@@ -146,7 +147,7 @@ def mod_at_version_limit(mod_id: str, version_date: str, base_dir: Path | None =
 
 
 def create_mod_priority_list(base_dir: Path | None = None) -> None:
-    prio_file = resolve_base_dir(base_dir) / '.moddingoverlay' / 'priority.txt'
+    prio_file = get_meta_directory(resolve_base_dir(base_dir)) / 'priority.txt'
     try:
         with open(prio_file, mode='x') as f:
             pass
@@ -156,7 +157,7 @@ def create_mod_priority_list(base_dir: Path | None = None) -> None:
 
 def read_mod_priority(base_dir: Path | None = None) -> OrderedDict[str, None]:
     resolved_base_dir = resolve_base_dir(base_dir)
-    prio_file = resolved_base_dir / '.moddingoverlay' / 'priority.txt'
+    prio_file = get_meta_directory(resolved_base_dir) / 'priority.txt'
     mod_order: OrderedDict[str, None] = OrderedDict()
     try:
         with (open(prio_file, mode='rt') as f):
@@ -175,7 +176,7 @@ def read_mod_priority(base_dir: Path | None = None) -> OrderedDict[str, None]:
 
 
 def write_mod_priority(mod_order: OrderedDict[str, None], base_dir: Path | None = None) -> None:
-    prio_file = resolve_base_dir(base_dir) / '.moddingoverlay' / 'priority.txt'
+    prio_file = get_meta_directory(resolve_base_dir(base_dir)) / 'priority.txt'
     with open(prio_file, mode='wt') as f:
         for mod_id in mod_order.keys():
             f.write(mod_id + '\n')

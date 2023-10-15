@@ -9,6 +9,7 @@ from sys import stderr
 from typing import *
 
 from code.config_mod import meets_requirements
+from code.paths import get_meta_directory
 
 TSetting = TypeVar("TSetting")
 
@@ -92,7 +93,7 @@ class ValidInstanceSettings(Enum):
 
 class InstanceSettings:
     def __init__(self, instance_path: Path) -> None:
-        self.settingsPath = instance_path / ".moddingoverlay" / "settings"
+        self.settingsPath = get_meta_directory(instance_path) / "settings"
 
     def initialize_settings_directory(self) -> None:
         self.settingsPath.mkdir(parents=True, exist_ok=True)
