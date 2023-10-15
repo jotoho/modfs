@@ -8,7 +8,9 @@ from re import match, fullmatch, search
 from sys import stderr
 from typing import Iterable
 
+from code.config_mod import ModConfig, ValidModSettings
 from code.paths import get_meta_directory
+from code.settings import get_instance_settings
 from code.tools import current_date
 
 base_directory: Path | None = None
@@ -123,6 +125,15 @@ def select_latest_version(mod_id: str,
     return date, subversion
 
 
+def select_active_version(mod_id: str,
+                          base_dir: Path | None = None) -> tuple[str, str] | None:
+    saved_version_str: str = ModConfig(mod_id, base_dir).get(ValidModSettings.MOD_VERSION)
+    if saved_version_str.lower() == "latest":
+        return select_latest_version(mod_id, base_dir)
+    else:
+        return parse_version_tag(saved_version_str)
+
+
 def cast_validate_mod_id(mod_id: str) -> str:
     if not validate_mod_id(mod_id):
         raise ValueError("mod id contains invalid characters")
@@ -193,7 +204,7 @@ def build_mod_order(order_template: Iterable[str]) -> OrderedDict[str, None]:
 def parse_mod_conflicts() -> dict[frozenset[str], set[Path]]:
     mod_dirs: set[Path] = set()
     for mod_id in get_mod_ids():
-        version_tuple = select_latest_version(mod_id)
+        version_tuple = select_active_version(mod_id)
         if version_tuple is None:
             continue
         date, sub = version_tuple
