@@ -201,9 +201,15 @@ def build_mod_order(order_template: Iterable[str]) -> OrderedDict[str, None]:
     return final_mod_order
 
 
+def is_mod_active(mod_id: str, base_dir: Path | None = None) -> bool:
+    return ModConfig(mod_id, resolve_base_dir(base_dir)).get(ValidModSettings.ENABLED)
+
+
 def parse_mod_conflicts() -> dict[frozenset[str], set[Path]]:
     mod_dirs: set[Path] = set()
     for mod_id in get_mod_ids():
+        if not is_mod_active(mod_id):
+            continue
         version_tuple = select_active_version(mod_id)
         if version_tuple is None:
             continue
