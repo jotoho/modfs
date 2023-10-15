@@ -15,20 +15,20 @@ from code.tools import current_date
 
 
 def create_mod_space(mod_id: str, base_dir: Path | None = None) -> Path:
-    real_base_dir = resolve_base_dir(base_dir)
-    mod_dir = real_base_dir / 'mods' / mod_id
+    mod_dir = resolve_base_dir(base_dir) / 'mods' / mod_id
     mod_dir.mkdir(parents=True, exist_ok=True)
     version_tuple = select_latest_version(mod_id)
-    prev_date, prev_subversion = version_tuple if version_tuple is not None else (None, None)
-    if prev_date == current_date():
-        new_subversion = str(int(prev_subversion) + 1).zfill(2)
-        location = mod_dir / prev_date / new_subversion
-        location.mkdir(parents=True, exist_ok=True)
-        return location
-    else:
-        location: Path = mod_dir / current_date() / '00'
-        location.mkdir(parents=True, exist_ok=True)
-        return location
+    if version_tuple is not None:
+        prev_date, prev_subversion = version_tuple
+        if prev_date == current_date():
+            new_subversion = str(int(prev_subversion) + 1).zfill(2)
+            location = mod_dir / prev_date / new_subversion
+            location.mkdir(parents=True, exist_ok=True)
+            return location
+
+    location: Path = mod_dir / current_date() / '00'
+    location.mkdir(parents=True, exist_ok=True)
+    return location
 
 
 def recursive_lower_case_rename(current_path: Path) -> None:
