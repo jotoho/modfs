@@ -10,7 +10,7 @@ from sys import stderr
 from tempfile import TemporaryDirectory
 from typing import Callable, Literal
 
-from code.config_mod import mod_change_activation, ModConfig, ValidModSettings
+from code.mod import mod_change_activation, ModConfig, ValidModSettings
 from code.creation import create_mod_space, recursive_lower_case_rename, ask_for_path, \
     transfer_mod_files, extract_archive
 from code.deployer import deploy_filesystem, stop_filesystem, are_paths_on_same_filesystem, \

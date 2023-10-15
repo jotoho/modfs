@@ -8,7 +8,7 @@ from re import match, IGNORECASE, NOFLAG
 from sys import stderr
 from typing import *
 
-from code.config_mod import meets_requirements
+from code.mod import meets_requirements
 from code.paths import get_meta_directory
 
 TSetting = TypeVar("TSetting")
