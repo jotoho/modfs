@@ -213,6 +213,8 @@ def subcommand_init(args: dict[str, Any]) -> None:
     instance_settings.set(ValidInstanceSettings.FILESYSTEM_OVERFLOW_DIR, overflow_directory)
     instance_settings.set(ValidInstanceSettings.FILESYSTEM_WORK_DIR, work_directory)
 
+    recursive_lower_case_rename(target_directory)
+
 
 def subcommand_reorder(args: dict[str, Any]) -> None:
     if is_fuse_overlayfs_mounted():
