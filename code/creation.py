@@ -2,6 +2,7 @@
 #
 # SPDX-FileCopyrightText: 2023 Jonas Tobias Hopusch <git@jotoho.de>
 # SPDX-License-Identifier: AGPL-3.0-only
+from filecmp import cmp
 from pathlib import Path
 from pprint import pprint
 from re import IGNORECASE, compile, Pattern
@@ -37,11 +38,14 @@ def recursive_lower_case_rename(current_path: Path) -> None:
 
     # print("Processing all entries in directory: " + str(currentPath))
     for element in current_path.iterdir():
-        if element.exists() and (element.is_dir() or element.is_file()):
+        if element.exists():
             new_path = Path(
                 current_path.joinpath(Path(str(element.relative_to(current_path)).lower())))
             if new_path.exists():
                 if new_path.samefile(element):
+                    continue
+                elif cmp(element, new_path, shallow=False):
+                    element.unlink(missing_ok=True)
                     continue
                 else:
                     print(f"Path '{str(new_path)}' is already used. Cannot move '{str(element)}'",
@@ -52,7 +56,8 @@ def recursive_lower_case_rename(current_path: Path) -> None:
                 assert element.is_dir() or element.is_file()
                 element.rename(new_path)
         else:
-            print("FATAL: for loop emitted invalid path!", file=stderr)
+            print("FATAL: for loop emitted invalid path!",
+                  file=stderr)
             from errno import EIO
             exit(EIO)
     for element in current_path.iterdir():

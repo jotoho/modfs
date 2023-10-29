@@ -207,6 +207,13 @@ def is_mod_active(mod_id: str, base_dir: Path | None = None) -> bool:
     return ModConfig(mod_id, resolve_base_dir(base_dir)).get(ValidModSettings.ENABLED)
 
 
+def identical_files(path1: Path | None, path2: Path) -> Path | None:
+    if path1 is not None and cmp(path1, path2, shallow=False):
+        return path1
+    else:
+        return None
+
+
 def remove_harmless_conflicts(mapping: dict[frozenset[str], set[Path]]) \
         -> dict[frozenset[str], set[Path]]:
     for mods, file_patterns in mapping.items():
@@ -214,12 +221,6 @@ def remove_harmless_conflicts(mapping: dict[frozenset[str], set[Path]]) \
         for mod in mods:
             date, subversion = select_active_version(mod)
             mod_dirs.add(resolve_base_dir() / 'mods' / mod / date / subversion)
-
-        def identical_files(path1: Path | None, path2: Path) -> Path | None:
-            if path1 is not None and cmp(path1, path2, shallow=False):
-                return path1
-            else:
-                return None
 
         def pattern_filter(pattern: Path) -> bool:
             return reduce(identical_files, {mod_dir / pattern for mod_dir in mod_dirs}) is not None

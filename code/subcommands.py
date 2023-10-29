@@ -16,8 +16,7 @@ from code.deployer import deploy_filesystem, stop_filesystem, are_paths_on_same_
 from code.mod import get_mod_ids, get_mod_versions, select_latest_version, validate_mod_id, \
     mod_at_version_limit, write_mod_priority, read_mod_priority, build_mod_order, \
     parse_mod_conflicts, version_exists, parse_version_tag
-from code.settings import InstanceSettings, ValidInstanceSettings, instance_settings, \
-    get_instance_settings
+from code.settings import InstanceSettings, ValidInstanceSettings, get_instance_settings
 from code.tools import current_date
 
 
@@ -175,7 +174,7 @@ def subcommand_repair(args: dict[str, Any]) -> None:
             recursive_lower_case_rename(mod_dir)
         if rename_game_files:
             recursive_lower_case_rename(
-                instance_settings.get(ValidInstanceSettings.DEPLOYMENT_TARGET_DIR)
+                get_instance_settings().get(ValidInstanceSettings.DEPLOYMENT_TARGET_DIR)
             )
         if rename_overflow:
             overflow_dir = get_instance_settings().get(
@@ -192,8 +191,7 @@ def subcommand_repair(args: dict[str, Any]) -> None:
 
 
 def subcommand_init(args: dict[str, Any]) -> None:
-    from code.settings import instance_settings
-    instance_settings.initialize_settings_directory()
+    get_instance_settings().initialize_settings_directory()
     (args["instance"] / 'mods').mkdir(exist_ok=True, parents=True)
     write_mod_priority(read_mod_priority(base_dir=args["instance"]), base_dir=args["instance"])
 
@@ -209,9 +207,10 @@ def subcommand_init(args: dict[str, Any]) -> None:
         "Please specify a working directory on the same filesystem as the target directory",
         lambda path: path.is_dir() and are_paths_on_same_filesystem(path, target_directory))
 
-    instance_settings.set(ValidInstanceSettings.DEPLOYMENT_TARGET_DIR, target_directory)
-    instance_settings.set(ValidInstanceSettings.FILESYSTEM_OVERFLOW_DIR, overflow_directory)
-    instance_settings.set(ValidInstanceSettings.FILESYSTEM_WORK_DIR, work_directory)
+    settings = get_instance_settings()
+    settings.set(ValidInstanceSettings.DEPLOYMENT_TARGET_DIR, target_directory)
+    settings.set(ValidInstanceSettings.FILESYSTEM_OVERFLOW_DIR, overflow_directory)
+    settings.set(ValidInstanceSettings.FILESYSTEM_WORK_DIR, work_directory)
 
     recursive_lower_case_rename(target_directory)
 
