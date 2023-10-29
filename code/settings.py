@@ -131,6 +131,10 @@ class InstanceSettings:
         if not meets_requirements(value, setting.requirements):
             raise ValueError(f"Tried to write invalid value '{value}' to setting"
                              f" {setting.setting_id}")
+        # Always try to use instance-relative paths, if possible.
+        if isinstance(value, Path):
+            from code.mod import attempt_instance_relative_cast
+            value = attempt_instance_relative_cast(value)
         try:
             self.get_file_path(setting).write_text(data=str(value) + '\n', encoding='UTF-8')
         except IsADirectoryError:

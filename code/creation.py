@@ -4,14 +4,13 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 from filecmp import cmp
 from pathlib import Path
-from pprint import pprint
 from re import IGNORECASE, compile, Pattern
 from shutil import copy, copytree, move, which
 from subprocess import run
 from sys import stderr
 from typing import Callable
 
-from code.mod import resolve_base_dir, select_latest_version
+from code.mod import resolve_base_dir, select_latest_version, attempt_instance_relative_cast
 from code.tools import current_date
 
 
@@ -77,7 +76,7 @@ def ask_for_path(prompt: str, meets_requirements: Callable[[Path | None], bool])
         print(prompt)
 
         try:
-            deployment_target_dir = Path(input("Path: ")).resolve()
+            deployment_target_dir = attempt_instance_relative_cast(Path(input("Path: ")).resolve())
         except EOFError:
             print("FATAL: User closed the standard input stream", file=stderr)
             from os import EX_NOINPUT

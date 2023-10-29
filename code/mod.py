@@ -376,3 +376,11 @@ class ModConfig:
 def mod_change_activation(mod_id: str, enable_status: bool, base_dir: Path | None = None) -> None:
     mod_settings = ModConfig(mod_id, resolve_base_dir(base_dir))
     mod_settings.set(ValidModSettings.ENABLED, enable_status)
+
+
+def attempt_instance_relative_cast(path: Path, base_dir: Path | None = None) -> Path:
+    instance_path = resolve_base_dir(base_dir).resolve()
+    try:
+        return path.resolve().relative_to(instance_path)
+    except ValueError:
+        return path
