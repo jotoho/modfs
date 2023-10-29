@@ -198,6 +198,9 @@ def process_commandline_args() -> Namespace:
     subparsers.add_parser("help",
                           formatter_class=ArgumentDefaultsHelpFormatter,
                           help="Show this help information")
+    subparsers.add_parser("version",
+                          formatter_class=ArgumentDefaultsHelpFormatter,
+                          help="Show the current version of modfs, if possible")
 
     evaluated_args = parser.parse_args()
     if (not evaluated_args.subcommand) or (evaluated_args.subcommand == "help"):
