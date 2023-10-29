@@ -177,6 +177,11 @@ def process_commandline_args() -> Namespace:
                                             help="""
         Process the game files in the target directory
     """.strip())
+    repair_filenamecase_parser.add_argument("--overflow",
+                                            action="store_true",
+                                            help="""
+        Process the modified files in the overflow directory
+    """.strip())
     repair_filenamecase_parser.add_argument("modids",
                                             nargs='*',
                                             default=[],

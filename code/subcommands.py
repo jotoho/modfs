@@ -168,6 +168,7 @@ def subcommand_repair(args: dict[str, Any]) -> None:
         all_mods: bool = args["all"]
         named_mods: list[str] = args["modids"]
         rename_game_files: bool = args["gamefiles"]
+        rename_overflow: bool = args["overflow"]
         mods_to_rename: set[str] = set(named_mods + (get_mod_ids() if all_mods else []))
         for mod in mods_to_rename:
             mod_dir = base_directory / 'mods' / mod
@@ -176,6 +177,13 @@ def subcommand_repair(args: dict[str, Any]) -> None:
             recursive_lower_case_rename(
                 instance_settings.get(ValidInstanceSettings.DEPLOYMENT_TARGET_DIR)
             )
+        if rename_overflow:
+            overflow_dir = get_instance_settings().get(
+                ValidInstanceSettings.FILESYSTEM_OVERFLOW_DIR
+            )
+            assert isinstance(overflow_dir, Path)
+            if overflow_dir.is_dir():
+                recursive_lower_case_rename(overflow_dir)
     elif args["repairaction"] == "filepriority":
         write_mod_priority(read_mod_priority())
     else:
