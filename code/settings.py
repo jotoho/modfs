@@ -62,12 +62,6 @@ class ValidInstanceSettings(Enum):
         # Fallback to type constructor
         self.cast_funcs.append((lambda unused: True, value_type))
 
-    # BACKGROUND DEPLOYMENT CURRENTLY NOT IMPLEMENTED
-    BACKGROUND_DEPLOYMENT = ("deployInBackground",
-                             bool,
-                             False,
-                             [],
-                             True)
     DEPLOYMENT_TARGET_DIR = ("deploymentTargetDir",
                              Path,
                              None,
