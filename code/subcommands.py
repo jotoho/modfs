@@ -363,6 +363,8 @@ def subcommand_delete(args: dict[str, Any]) -> None:
     if mod_dir.is_dir():
         from shutil import rmtree
         rmtree(mod_dir)
+    mod_conf: Path = args["instance"] / 'mods' / f"{mod_id}.json"
+    mod_conf.unlink(missing_ok=True)
 
 
 def subcommand_enable(args: dict[str, Any]) -> None:
