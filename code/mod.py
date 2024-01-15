@@ -155,7 +155,10 @@ def mod_at_version_limit(mod_id: str, version_date: str, base_dir: Path | None =
     if not mod_exists(mod_id, base_dir=base_dir):
         return False
 
-    subversions = get_mod_versions(mod_id, base_dir=base_dir)[version_date]
+    version_info = get_mod_versions(mod_id, base_dir=base_dir)
+    if not (current_date() in version_info.keys()):
+        return False
+    subversions = version_info[version_date]
     return len(list(filter(condition_func, subversions))) > 0
 
 
