@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-#
-# SPDX-FileCopyrightText: 2023 Jonas Tobias Hopusch <git@jotoho.de>
-# SPDX-License-Identifier: AGPL-3.0-only
+"""
+    SPDX-FileCopyrightText: 2023 Jonas Tobias Hopusch <git@jotoho.de>
+    SPDX-License-Identifier: AGPL-3.0-only
+"""
 from collections import OrderedDict
 from pathlib import Path
 from sys import stderr
 from tempfile import TemporaryDirectory
-from typing import Callable, Literal, Any
+from typing import Callable, Literal, TypedDict, NotRequired, Required
 
-from code.mod import mod_change_activation, ModConfig, ValidModSettings
+from code.mod import mod_change_activation, ModConfig, ValidModSettings, make_modver_link, \
+    mod_exists
 from code.creation import create_mod_space, recursive_lower_case_rename, ask_for_path, \
     transfer_mod_files, extract_archive
 from code.deployer import deploy_filesystem, stop_filesystem, are_paths_on_same_filesystem, \
@@ -20,7 +22,46 @@ from code.settings import InstanceSettings, ValidInstanceSettings, get_instance_
 from code.tools import current_date
 
 
-def subcommand_list(args: dict[str, Any]) -> None:
+class SubcommandArgDict(TypedDict, total=False):
+    """
+    type information for cli argument information that may be passed to subcommands of modfs
+    """
+    show_args: Required[bool]
+    mod_id: Required[str]
+    instance: Required[Path]
+    version_string: NotRequired[str]
+    subcommand: NotRequired[str]
+    listtype: NotRequired[str]
+    all: NotRequired[bool]
+    preserve_source: NotRequired[bool]
+    subdir: NotRequired[str]
+    import_path: NotRequired[Path]
+    set_author: NotRequired[str]
+    set_name: NotRequired[str]
+    set_link: NotRequired[str]
+    repairaction: NotRequired[str]
+    modids: NotRequired[list[str]]
+    gamefiles: NotRequired[bool]
+    overflow: NotRequired[bool]
+    reorder_operation: NotRequired[Literal["before", "after", "highest", "lowest"]]
+    mod_to_reorder: NotRequired[str]
+    reference_modid: NotRequired[str]
+    developer_action: NotRequired[str]
+    config_actions: NotRequired[Literal["get", "set", "unset", "list"]]
+    setting_id: NotRequired[str]
+    setting_val: NotRequired[str]
+    version: NotRequired[str]
+    mod_action: NotRequired[Literal["set", "info"]]
+    attribute: NotRequired[Literal["author", "name", "note", "link"]]
+    value: NotRequired[str]
+
+
+def subcommand_list(args: SubcommandArgDict) -> None:
+    """
+
+    :param args:
+    :type args:
+    """
     if args["listtype"] == "mods":
         print("List of installed mods:")
         for mod in get_mod_ids(args["instance"]):
@@ -30,16 +71,16 @@ def subcommand_list(args: dict[str, Any]) -> None:
             print("You need to specify mods or give the --all flag to list versions.",
                   file=stderr)
             exit(1)
-        mods_to_process = args["mod_id"] + get_mod_ids() if args["all"] else args["mod_id"]
+        mods_to_process = [args["mod_id"]] + get_mod_ids() if args["all"] else args["mod_id"]
         for mod in sorted(set(mods_to_process)):
             print(f"{mod}:")
             versions = get_mod_versions(mod)
             for date, subversions in sorted(versions.items()):
-                firstSubversion = True
+                first_subversion = True
                 for subver in sorted(subversions):
                     pri_ver_str = date
-                    if firstSubversion:
-                        firstSubversion = False
+                    if first_subversion:
+                        first_subversion = False
                     else:
                         pri_ver_str = (' ' * len(date))
                     ver_str = "  " + pri_ver_str + '/' + subver
@@ -64,7 +105,12 @@ def subcommand_list(args: dict[str, Any]) -> None:
                 print((" " * 4) + str(file))
 
 
-def subcommand_activate(args: dict[str, Any]) -> None:
+def subcommand_activate(args: SubcommandArgDict) -> None:
+    """
+
+    :param args:
+    :type args:
+    """
     deployment_directory = InstanceSettings(args["instance"]).get(
         ValidInstanceSettings.DEPLOYMENT_TARGET_DIR)
     if deployment_directory is None:
@@ -88,7 +134,12 @@ def subcommand_activate(args: dict[str, Any]) -> None:
     deploy_filesystem(deployment_directory, mods_to_deploy)
 
 
-def subcommand_deactivate(args: dict[str, Any]) -> None:
+def subcommand_deactivate(args: SubcommandArgDict) -> None:
+    """
+
+    :param args:
+    :type args:
+    """
     deployment_directory = InstanceSettings(args["instance"]).get(
         ValidInstanceSettings.DEPLOYMENT_TARGET_DIR)
     if deployment_directory is None:
@@ -101,9 +152,14 @@ def subcommand_deactivate(args: dict[str, Any]) -> None:
         stop_filesystem(deployment_directory)
 
 
-def subcommand_import(args: dict[str, Any]) -> None:
+def subcommand_import(args: SubcommandArgDict) -> None:
+    """
+
+    :param args:
+    :type args:
+    """
     only_copy: bool = args["preserve_source"]
-    mod_id: str = args["modid"]
+    mod_id: str = args["mod_id"]
     if not validate_mod_id(mod_id):
         print("A mod id may only contain lower case letters a-z, digits 0-9 and the minus sign",
               file=stderr)
@@ -117,7 +173,7 @@ def subcommand_import(args: dict[str, Any]) -> None:
     else:
         print(f"Importing mod {mod_id}")
 
-    raw_destination = create_mod_space(args["modid"]).resolve()
+    raw_destination = create_mod_space(mod_id).resolve()
     destination: Path = (raw_destination / args["subdir"]).resolve()
     if not destination.is_relative_to(raw_destination):
         print("Subdirectories must not break out of the assigned mod folder!",
@@ -160,8 +216,12 @@ def subcommand_import(args: dict[str, Any]) -> None:
         cfg.set(ValidModSettings.HYPERLINK, link)
 
 
+def subcommand_repair(args: SubcommandArgDict) -> None:
+    """
 
-def subcommand_repair(args: dict[str, Any]) -> None:
+    :param args:
+    :type args:
+    """
     if args["repairaction"] == "filenamecase":
         from code.mod import base_directory
         all_mods: bool = args["all"]
@@ -190,7 +250,12 @@ def subcommand_repair(args: dict[str, Any]) -> None:
         exit(1)
 
 
-def subcommand_init(args: dict[str, Any]) -> None:
+def subcommand_init(args: SubcommandArgDict) -> None:
+    """
+
+    :param args:
+    :type args:
+    """
     get_instance_settings().initialize_settings_directory()
     (args["instance"] / 'mods').mkdir(exist_ok=True, parents=True)
     write_mod_priority(read_mod_priority(base_dir=args["instance"]), base_dir=args["instance"])
@@ -215,7 +280,12 @@ def subcommand_init(args: dict[str, Any]) -> None:
     recursive_lower_case_rename(target_directory)
 
 
-def subcommand_reorder(args: dict[str, Any]) -> None:
+def subcommand_reorder(args: SubcommandArgDict) -> None:
+    """
+
+    :param args:
+    :type args:
+    """
     if is_fuse_overlayfs_mounted():
         print("You cannot reorder mods while the filesystem is active!",
               file=stderr)
@@ -256,7 +326,7 @@ def subcommand_reorder(args: dict[str, Any]) -> None:
         mod_order = read_mod_priority()
         if reorder_operation == "highest":
             if mod_id_to_reorder in mod_order.keys():
-                mod_order.move_to_end(mod_id_to_reorder, last=True)
+                mod_order.move_to_end(mod_id_to_reorder)
             else:
                 print(f"Mod {mod_id_to_reorder} does not exist.",
                       file=stderr)
@@ -273,7 +343,14 @@ def subcommand_reorder(args: dict[str, Any]) -> None:
         exit(1)
 
 
-def subcommand_developer(args: dict[str, Any]) -> None:
+def subcommand_developer(args: SubcommandArgDict) -> None:
+    """
+
+    :param args:
+    :type args:
+    :return:
+    :rtype:
+    """
     no_dev_warning: bool = get_instance_settings().get(
         ValidInstanceSettings.SUPPRESS_DEVELOPER_CMD_WARNING)
     if not no_dev_warning:
@@ -291,7 +368,12 @@ Do not use them unless you know what you're doing or are following instructions 
         print("Created directory:", create_mod_space(args["mod_id"]))
 
 
-def subcommand_status(args: dict[str, Any]) -> None:
+def subcommand_status(_: SubcommandArgDict) -> None:
+    """
+
+    :param _:
+    :type _:
+    """
     target_dir_setting = ValidInstanceSettings.DEPLOYMENT_TARGET_DIR
     assert target_dir_setting.value_type == Path
     target_dir: Path | None = get_instance_settings().get(target_dir_setting)
@@ -303,61 +385,68 @@ def subcommand_status(args: dict[str, Any]) -> None:
     else:
         print("filesystem is not active")
 
-def subcommand_config(args: dict[str, Any]) -> None:
-    valid_operations = frozenset({
-        "get",
-        "set",
-        "unset",
-        "list",
-    })
-    operation: Literal["get", "set", "unset", "list"] = args["config_actions"]
-    if operation is None or operation not in valid_operations:
-        print("Invalid config operation", file=stderr)
-        exit(1)
 
-    if operation == "list":
-        for cfg in ValidInstanceSettings:
-            cfg_id = cfg.setting_id
-            if get_instance_settings().is_set(cfg):
-                print("CUSTOM: ", cfg_id)
-            else:
-                print("DEFAULT:", cfg_id)
-    elif operation in {"get", "set", "unset"}:
-        setting_id: str = args["setting_id"].lower()
-        matching_settings = list(filter(
-            lambda cfg: cfg.setting_id.lower().startswith(setting_id.lower()),
-            ValidInstanceSettings))
+def subcommand_config(args: SubcommandArgDict) -> None:
+    """
 
-        if len(matching_settings) < 1:
-            print("setting not found", file=stderr)
+    :param args:
+    :type args:
+    """
+    operation: Literal["get", "set", "unset", "list"] | None = args["config_actions"]
+
+    match operation:
+        case "list":
+            for cfg in ValidInstanceSettings:
+                cfg_id = cfg.setting_id
+                if get_instance_settings().is_set(cfg):
+                    print("CUSTOM: ", cfg_id)
+                else:
+                    print("DEFAULT:", cfg_id)
+        case _ if operation in {"get", "set", "unset"}:
+            setting_id: str = args["setting_id"].lower()
+            matching_settings = list(filter(
+                lambda cfg2: cfg2.setting_id.lower().startswith(setting_id.lower()),
+                ValidInstanceSettings))
+
+            if len(matching_settings) < 1:
+                print("setting not found", file=stderr)
+                exit(1)
+            elif len(matching_settings) > 1:
+                print("multiple matching settings", file=stderr)
+                exit(1)
+
+            setting: ValidInstanceSettings = matching_settings[0]
+
+            match operation:
+                case "get":
+                    if setting_id.lower() != setting.setting_id.lower():
+                        print("warning: querying config via incomplete id may not work when using "
+                              "different versions of modfs", file=stderr)
+                    print(setting.setting_id, "=",
+                          get_instance_settings().get(setting, force_retrieval=True))
+                case "set":
+                    if setting_id.lower() != setting.setting_id.lower():
+                        print("warning: setting config via incomplete id may not work when using "
+                              "different versions of modfs", file=stderr)
+                    new_value_str: str = args["setting_val"]
+                    new_value = setting.value_type(new_value_str)
+                    get_instance_settings().set(setting, new_value)
+                case "unset":
+                    if setting_id.lower() != setting.setting_id.lower():
+                        print("warning: unsetting config via incomplete id may not work when using "
+                              "different versions of modfs", file=stderr)
+                    get_instance_settings().unset(setting)
+        case _:
+            print("Invalid config operation", file=stderr)
             exit(1)
-        elif len(matching_settings) > 1:
-            print("multiple matching settings", file=stderr)
-            exit(1)
-
-        setting: ValidInstanceSettings = matching_settings[0]
-
-        if operation == "get":
-            if setting_id.lower() != setting.setting_id.lower():
-                print("warning: querying config via incomplete id may not work when using "
-                      "different versions of modfs", file=stderr)
-            print(setting.setting_id, "=",
-                  get_instance_settings().get(setting, force_retrieval=True))
-        elif operation == "set":
-            if setting_id.lower() != setting.setting_id.lower():
-                print("warning: setting config via incomplete id may not work when using "
-                      "different versions of modfs", file=stderr)
-            new_value_str: str = args["setting_val"]
-            new_value = setting.value_type(new_value_str)
-            get_instance_settings().set(setting, new_value)
-        elif operation == "unset":
-            if setting_id.lower() != setting.setting_id.lower():
-                print("warning: unsetting config via incomplete id may not work when using "
-                      "different versions of modfs", file=stderr)
-            get_instance_settings().unset(setting)
 
 
-def subcommand_delete(args: dict[str, Any]) -> None:
+def subcommand_delete(args: SubcommandArgDict) -> None:
+    """
+
+    :param args:
+    :type args:
+    """
     mod_id: str = args["mod_id"]
     mod_dir: Path = args["instance"] / 'mods' / mod_id
     if mod_dir.is_dir():
@@ -367,15 +456,30 @@ def subcommand_delete(args: dict[str, Any]) -> None:
     mod_conf.unlink(missing_ok=True)
 
 
-def subcommand_enable(args: dict[str, Any]) -> None:
+def subcommand_enable(args: SubcommandArgDict) -> None:
+    """
+
+    :param args:
+    :type args:
+    """
     mod_change_activation(args["mod_id"], True, base_dir=args["instance"])
 
 
-def subcommand_disable(args: dict[str, Any]) -> None:
+def subcommand_disable(args: SubcommandArgDict) -> None:
+    """
+
+    :param args:
+    :type args:
+    """
     mod_change_activation(args["mod_id"], False, base_dir=args["instance"])
 
 
-def subcommand_useversion(args: dict[str, Any]) -> None:
+def subcommand_useversion(args: SubcommandArgDict) -> None:
+    """
+
+    :param args:
+    :type args:
+    """
     mod_id: str = args["mod_id"]
     version_str: str = args["version"]
 
@@ -396,9 +500,14 @@ def subcommand_useversion(args: dict[str, Any]) -> None:
         exit(1)
 
 
-def subcommand_mod(args: dict[str, Any]) -> None:
+def subcommand_mod(args: SubcommandArgDict) -> None:
+    """
+
+    :param args:
+    :type args:
+    """
     mod_id: str = args["mod_id"]
-    action: str | None = args["mod_action"]
+    action: Literal["set", "info"] | None = args["mod_action"]
     if action is None:
         print("You must specify an action to take with the given mod",
               file=stderr)
@@ -406,7 +515,7 @@ def subcommand_mod(args: dict[str, Any]) -> None:
 
     cfg = ModConfig(mod_id)
     if action == "set":
-        attribute: str = args["attribute"]
+        attribute: Literal["author", "name", "note", "link"] = args["attribute"]
         value: str = args["value"]
         if attribute == "author":
             cfg.set(ValidModSettings.AUTHOR, value)
@@ -430,7 +539,6 @@ def subcommand_mod(args: dict[str, Any]) -> None:
             print(f"Link:\t{cfg_link}")
         print(f"Status:\t" + "Enabled" if cfg.get(ValidModSettings.ENABLED) else "Disabled")
         latest_version = select_latest_version(mod_id)
-        printed_active_ver: bool = False
         if latest_version is not None:
             latest_date, latest_sub = latest_version
             print(f"Latest version: {latest_date}/{latest_sub}")
@@ -447,14 +555,24 @@ def subcommand_mod(args: dict[str, Any]) -> None:
             print(indent(cfg_notes, " " * 2))
 
 
-def subcommand_version(args: dict[str, Any]) -> None:
+def subcommand_version(args: SubcommandArgDict) -> None:
+    """
+
+    :param args:
+    :type args:
+    """
     version_string: str = args["version_string"]
     if version_string is None or len(version_string) < 1:
         version_string = "unknown"
     print("modfs version", version_string)
 
 
-def get_subcommands_table() -> dict[str, Callable[[dict[str, Any]], None]]:
+def get_subcommands_table() -> dict[str, Callable[[SubcommandArgDict], None]]:
+    """
+
+    :return:
+    :rtype:
+    """
     return {
         "list": subcommand_list,
         "activate": subcommand_activate,

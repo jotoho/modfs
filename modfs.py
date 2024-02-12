@@ -8,7 +8,7 @@ from sys import stderr
 from code.commandline import process_commandline_args, get_instance_path
 from code.mod import set_mod_base_path, resolve_base_dir
 from code.settings import set_instance_settings, InstanceSettings, get_instance_settings
-from code.subcommands import get_subcommands_table
+from code.subcommands import get_subcommands_table, SubcommandArgDict
 
 
 def app_install_dir() -> Path:
@@ -44,7 +44,7 @@ def main() -> None:
     set_instance_settings(InstanceSettings(instance_path))
     assert get_instance_settings() is not None
     # Warning: mod base path must be known before this can be safely called
-    args = vars(process_commandline_args())
+    args: SubcommandArgDict = vars(process_commandline_args())
     if args["show_args"]:
         from pprint import pprint
         pprint(vars(args))

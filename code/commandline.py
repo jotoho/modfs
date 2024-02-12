@@ -104,7 +104,7 @@ def process_commandline_args() -> Namespace:
     import_parser.add_argument("--set-link",
                                type=str,
                                default=None)
-    import_parser.add_argument("modid",
+    import_parser.add_argument("mod_id",
                                type=str)
     import_parser.add_argument("import_path",
                                type=Path,
