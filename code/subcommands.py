@@ -70,7 +70,7 @@ def subcommand_list(args: SubcommandArgDict) -> None:
             print("You need to specify mods or give the --all flag to list versions.",
                   file=stderr)
             exit(1)
-        mods_to_process = [args["mod_id"]] + get_mod_ids() if args["all"] else args["mod_id"]
+        mods_to_process = list(args["mod_id"]) + get_mod_ids() if args["all"] else args["mod_id"]
         for mod in sorted(set(mods_to_process)):
             print(f"{mod}:")
             versions = get_mod_versions(mod)
