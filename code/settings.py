@@ -83,6 +83,11 @@ class ValidInstanceSettings(Enum):
                                       False,
                                       [],
                                       True)
+    DISABLE_FORCED_LOWERCASE_FILES = ("suppressLowercaseRenaming",
+                                      bool,
+                                      False,
+                                      [],
+                                      True)
 
 
 class InstanceSettings:

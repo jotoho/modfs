@@ -265,6 +265,11 @@ def parse_mod_conflicts() -> dict[frozenset[str], set[Path]]:
     return remove_harmless_conflicts(mod_mapping)
 
 
+def process_mod_subdir_argument(raw_subdir: str, mod_id: str) -> str:
+    raw_subdir = raw_subdir.replace("MOD_NAME", mod_id)
+    return raw_subdir
+
+
 TSetting = TypeVar("TSetting")
 
 filter_predicate = Callable[[TSetting], bool]

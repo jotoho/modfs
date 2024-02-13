@@ -11,6 +11,7 @@ from sys import stderr
 from typing import Callable
 
 from code.mod import resolve_base_dir, select_latest_version, attempt_instance_relative_cast
+from code.settings import get_instance_settings, ValidInstanceSettings
 from code.tools import current_date
 
 
@@ -33,6 +34,9 @@ def create_mod_space(mod_id: str, base_dir: Path | None = None) -> Path:
 
 def recursive_lower_case_rename(current_path: Path) -> None:
     if current_path is None or not isinstance(current_path, Path) or not current_path.is_dir():
+        return
+    if get_instance_settings().get(ValidInstanceSettings.DISABLE_FORCED_LOWERCASE_FILES):
+        print("Warning: Suppressed lowercase renaming on path " + str(current_path), file=stderr)
         return
 
     # print("Processing all entries in directory: " + str(currentPath))
