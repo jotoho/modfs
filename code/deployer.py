@@ -34,21 +34,25 @@ def is_fuse_overlayfs_mounted(target_directory: Path | None = None) -> bool:
 
 
 def get_or_create_overflow_dir() -> Path:
-    from code.mod import base_directory
-    configured_overflow_dir = InstanceSettings(base_directory).get(
+    from code.mod import resolve_base_dir
+    configured_overflow_dir: Path | None = InstanceSettings(resolve_base_dir()).get(
         ValidInstanceSettings.FILESYSTEM_OVERFLOW_DIR)
     overflow_dir = (configured_overflow_dir if configured_overflow_dir is not None
-                    else (base_directory / 'modifiedfiles'))
+                    else Path('modifiedfiles'))
+    if not overflow_dir.is_absolute():
+        overflow_dir = resolve_base_dir() / overflow_dir
     overflow_dir.mkdir(parents=True, exist_ok=True)
     return overflow_dir
 
 
 def get_or_create_work_dir() -> Path:
-    from code.mod import base_directory
-    configured_work_dir = InstanceSettings(base_directory).get(
+    from code.mod import resolve_base_dir
+    configured_work_dir: Path | None = InstanceSettings(resolve_base_dir()).get(
         ValidInstanceSettings.FILESYSTEM_WORK_DIR)
     work_dir = (configured_work_dir if configured_work_dir is not None
-                else (base_directory / 'working_cache'))
+                else Path('working_cache'))
+    if not work_dir.is_absolute():
+        work_dir = resolve_base_dir() / work_dir
     work_dir.mkdir(parents=True, exist_ok=True)
     return work_dir
 

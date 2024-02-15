@@ -111,7 +111,7 @@ def subcommand_activate(args: SubcommandArgDict) -> None:
     :param args:
     :type args:
     """
-    deployment_directory = InstanceSettings(args["instance"]).get(
+    deployment_directory: Path | None = InstanceSettings(args["instance"]).get(
         ValidInstanceSettings.DEPLOYMENT_TARGET_DIR)
     if deployment_directory is None:
         from sys import stderr
@@ -119,6 +119,8 @@ def subcommand_activate(args: SubcommandArgDict) -> None:
         No deployment directory has been configured for this instance. Aborting deployment.
         """.strip(), file=stderr)
         exit(1)
+    if not deployment_directory.is_absolute():
+        deployment_directory = (args["instance"] / deployment_directory).resolve()
     mods_to_deploy: OrderedDict[str, tuple[str, str]] = OrderedDict()
     for mod in read_mod_priority().keys():
         if not ModConfig(mod, args["instance"]).get(ValidModSettings.ENABLED):
@@ -173,6 +175,7 @@ def subcommand_import(args: SubcommandArgDict) -> None:
     else:
         print(f"Importing mod {mod_id}")
 
+    source: Path = args["import_path"]
     raw_destination = create_mod_space(mod_id).resolve()
     processed_subdir = process_mod_subdir_argument(args["subdir"], mod_id)
     destination: Path = (raw_destination / processed_subdir).resolve()
@@ -181,7 +184,6 @@ def subcommand_import(args: SubcommandArgDict) -> None:
               file=stderr)
         exit(1)
     destination.mkdir(parents=True, exist_ok=True)
-    source: Path = args["import_path"]
 
     if source.is_dir():
         transfer_mod_files(source, destination, only_copy)
@@ -224,14 +226,14 @@ def subcommand_repair(args: SubcommandArgDict) -> None:
     :type args:
     """
     if args["repairaction"] == "filenamecase":
-        from code.mod import base_directory
+        from code.mod import resolve_base_dir
         all_mods: bool = args["all"]
         named_mods: list[str] = args["modids"]
         rename_game_files: bool = args["gamefiles"]
         rename_overflow: bool = args["overflow"]
         mods_to_rename: set[str] = set(named_mods + (get_mod_ids() if all_mods else []))
         for mod in mods_to_rename:
-            mod_dir = base_directory / 'mods' / mod
+            mod_dir = resolve_base_dir() / 'mods' / mod
             recursive_lower_case_rename(mod_dir)
         if rename_game_files:
             recursive_lower_case_rename(
