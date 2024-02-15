@@ -177,7 +177,9 @@ def subcommand_import(args: SubcommandArgDict) -> None:
 
     source: Path = args["import_path"]
     raw_destination = create_mod_space(mod_id).resolve()
-    processed_subdir = process_mod_subdir_argument(args["subdir"], mod_id)
+    processed_subdir = process_mod_subdir_argument(args["subdir"],
+                                                   mod_id=mod_id,
+                                                   src_dir=source)
     destination: Path = (raw_destination / processed_subdir).resolve()
     if not destination.is_relative_to(raw_destination):
         print("Subdirectories must not break out of the assigned mod folder!",

@@ -265,8 +265,14 @@ def parse_mod_conflicts() -> dict[frozenset[str], set[Path]]:
     return remove_harmless_conflicts(mod_mapping)
 
 
-def process_mod_subdir_argument(raw_subdir: str, mod_id: str) -> str:
-    raw_subdir = raw_subdir.replace("MOD_NAME", mod_id)
+def process_mod_subdir_argument(raw_subdir: str,
+                                mod_id: str | None = None,
+                                src_dir: Path | None = None) -> str:
+    if mod_id is not None:
+        raw_subdir = raw_subdir.replace("MOD_NAME", mod_id)
+    if src_dir is not None:
+        assert src_dir.is_dir()
+        raw_subdir = raw_subdir.replace("SRC_DIR", src_dir.parts[-1])
     return raw_subdir
 
 
