@@ -132,6 +132,8 @@ def process_commandline_args() -> Namespace:
                                                     help="List of mods sorted by the last time they were checked for update")
     list_update_parser.add_argument("--all",
                                     action="store_true")
+    list_update_parser.add_argument("--exclude-today",
+                                    action="store_true")
     list_update_parser.add_argument("modids",
                                     nargs="*",
                                     default=[],

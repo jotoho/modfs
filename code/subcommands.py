@@ -54,6 +54,7 @@ class SubcommandArgDict(TypedDict, total=False):
     mod_action: NotRequired[Literal["set", "info"]]
     attribute: NotRequired[Literal["author", "name", "note", "link"]]
     value: NotRequired[str]
+    exclude_today: NotRequired[bool]
 
 
 def subcommand_list(args: SubcommandArgDict) -> None:
@@ -117,6 +118,11 @@ def subcommand_list(args: SubcommandArgDict) -> None:
             if date not in listdata:
                 listdata[date] = set()
             listdata[date].add(mod)
+
+        if args["exclude_today"]:
+            today = current_date()
+            if today in listdata:
+                del listdata[today]
 
         for date in sorted(listdata.keys(), key=lambda s: s if s is not None else ""):
             mods = listdata[date]
