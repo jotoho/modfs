@@ -637,4 +637,5 @@ def get_subcommands_table() -> dict[str, Callable[[SubcommandArgDict], None]]:
         "useversion": subcommand_useversion,
         "mod": subcommand_mod,
         "version": subcommand_version,
+        "markuptodate": subcommand_markuptodate,
     }
