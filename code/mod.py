@@ -317,6 +317,9 @@ class ValidModSettings(Enum):
         lambda url: url == "" or match(r"^[\s]+", url, NOFLAG) is None,
         lambda url: url == "" or search(r"[\s]+$", url, NOFLAG) is None,
     })
+    LAST_UPDATE_CHECK = ("last_update_check", str, "", {
+        lambda s: s == "" or match("[0-9]{4}-[0-9]{2}-[0-9]{2}", s, NOFLAG) is not None
+    })
 
 
 def default_mod_settings() -> dict[str, Any]:
@@ -398,3 +401,24 @@ def attempt_instance_relative_cast(path: Path, base_dir: Path | None = None) -> 
         return path.resolve().relative_to(instance_path)
     except ValueError:
         return path
+
+
+def get_mod_last_update_check(mod_id: str, base_dir: Path | None = None) -> str | None:
+    """
+
+    :param mod_id:
+    :type mod_id:
+    :param base_dir:
+    :type base_dir:
+    :return:
+    :rtype:
+    """
+    stored_date: str = ModConfig(mod_id, base_dir).get(ValidModSettings.LAST_UPDATE_CHECK)
+    if stored_date is not None and stored_date != "":
+        return stored_date
+    else:
+        latest_version = select_latest_version(mod_id, base_dir)
+        if latest_version is not None:
+            return latest_version[0]
+        else:
+            return None

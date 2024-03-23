@@ -127,12 +127,21 @@ def process_commandline_args() -> Namespace:
     list_subparsers.add_parser("conflicts",
                                formatter_class=ArgumentDefaultsHelpFormatter,
                                help="List possible conflicts between all installed mods")
+    list_update_parser = list_subparsers.add_parser("updatecheck",
+                                                    formatter_class=ArgumentDefaultsHelpFormatter,
+                                                    help="List of mods sorted by the last time they were checked for update")
+    list_update_parser.add_argument("--all",
+                                    action="store_true")
+    list_update_parser.add_argument("modids",
+                                    nargs="*",
+                                    default=[],
+                                    type=cast_validate_mod_id)
     list_version_parser = list_subparsers.add_parser("versions",
                                                      formatter_class=ArgumentDefaultsHelpFormatter,
                                                      help="List the mods")
     list_version_parser.add_argument("--all",
                                      action="store_true")
-    list_version_parser.add_argument("mod_id",
+    list_version_parser.add_argument("modids",
                                      nargs='*',
                                      default=[],
                                      type=cast_validate_mod_id)
@@ -200,6 +209,11 @@ def process_commandline_args() -> Namespace:
     mod_set_parser.add_argument("attribute", choices={"author", "name", "note", "link"})
     mod_set_parser.add_argument("value")
     mod_action_parsers.add_parser("info")
+    markuptodate_parser = subparsers.add_parser("markuptodate")
+    markuptodate_parser.add_argument("modids",
+                                     nargs='+',
+                                     default=[],
+                                     type=cast_validate_mod_id)
     subparsers.add_parser("help",
                           formatter_class=ArgumentDefaultsHelpFormatter,
                           help="Show this help information")
