@@ -10,7 +10,7 @@ from tempfile import TemporaryDirectory
 from typing import Callable, Literal, TypedDict, NotRequired, Required
 
 from code.mod import mod_change_activation, ModConfig, ValidModSettings, mod_exists, \
-    process_mod_subdir_argument
+    process_mod_subdir_argument, get_mod_last_update_check
 from code.creation import create_mod_space, recursive_lower_case_rename, ask_for_path, \
     transfer_mod_files, extract_archive
 from code.deployer import deploy_filesystem, stop_filesystem, are_paths_on_same_filesystem, \
@@ -31,7 +31,7 @@ class SubcommandArgDict(TypedDict, total=False):
     instance: Required[Path]
     version_string: NotRequired[str]
     subcommand: NotRequired[str]
-    listtype: NotRequired[str]
+    listtype: NotRequired[Literal["mods", "conflicts", "versions", "priority", "updatecheck"]]
     all: NotRequired[bool]
     preserve_source: NotRequired[bool]
     subdir: NotRequired[str]
@@ -67,11 +67,11 @@ def subcommand_list(args: SubcommandArgDict) -> None:
         for mod in get_mod_ids(args["instance"]):
             print(mod)
     elif args["listtype"] == "versions":
-        if not args["all"] and len(args["mod_id"]) == 0:
+        if not args["all"] and len(args["modids"]) == 0:
             print("You need to specify mods or give the --all flag to list versions.",
                   file=stderr)
             exit(1)
-        mods_to_process = list(args["mod_id"]) + get_mod_ids() if args["all"] else args["mod_id"]
+        mods_to_process = list(args["modids"]) + get_mod_ids() if args["all"] else args["modids"]
         for mod in sorted(set(mods_to_process)):
             print(f"{mod}:")
             versions = get_mod_versions(mod)
@@ -103,6 +103,26 @@ def subcommand_list(args: SubcommandArgDict) -> None:
             print(set(mods))
             for file in files:
                 print((" " * 4) + str(file))
+    elif args["listtype"] == "updatecheck":
+        mod_list: set[str] = set(args["modids"])
+        if args["all"]:
+            mod_list |= set(get_mod_ids())
+        if len(mod_list) <= 0:
+            print("You must select one or more mods to list.", file=stderr)
+            exit(1)
+        print("The selected mods were last checked for updates on the following dates:")
+        listdata: dict[str | None, set[str]] = {}
+        for mod in mod_list:
+            date = get_mod_last_update_check(mod)
+            if date not in listdata:
+                listdata[date] = set()
+            listdata[date].add(mod)
+
+        for date in sorted(listdata.keys(), key=lambda s: s if s is not None else ""):
+            mods = listdata[date]
+            print((date + ":") if date is not None else "Never:")
+            for mod in sorted(mods):
+                print((12 * " ") + mod)
 
 
 def subcommand_activate(args: SubcommandArgDict) -> None:
@@ -210,6 +230,7 @@ def subcommand_import(args: SubcommandArgDict) -> None:
     recursive_lower_case_rename(raw_destination)
 
     cfg = ModConfig(mod_id)
+    cfg.set(ValidModSettings.LAST_UPDATE_CHECK, current_date())
     author: str | None = args["set_author"]
     if author is not None:
         cfg.set(ValidModSettings.AUTHOR, author)
@@ -553,6 +574,9 @@ def subcommand_mod(args: SubcommandArgDict) -> None:
             else:
                 active_date, active_sub = parse_version_tag(cfg_version)
                 print(f"Active version: {active_date}/{active_sub}")
+            last_updated = get_mod_last_update_check(mod_id)
+            print("Last checked for updates on: "
+                  f"{last_updated if last_updated is not None else 'Never'}")
         cfg_notes: str = cfg.get(ValidModSettings.NOTES)
         if len(cfg_notes) > 0:
             from textwrap import indent
@@ -570,6 +594,16 @@ def subcommand_version(args: SubcommandArgDict) -> None:
     if version_string is None or len(version_string) < 1:
         version_string = "unknown"
     print("modfs version", version_string)
+
+
+def subcommand_markuptodate(args: SubcommandArgDict) -> None:
+    """
+
+    :param args:
+    :type args:
+    """
+    for mod in args["modids"]:
+        ModConfig(mod).set(ValidModSettings.LAST_UPDATE_CHECK, current_date())
 
 
 def get_subcommands_table() -> dict[str, Callable[[SubcommandArgDict], None]]:
