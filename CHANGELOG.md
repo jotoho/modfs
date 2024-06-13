@@ -160,4 +160,6 @@ This project adheres to the rules of semantic versioning for naming releases.
 
 _Initial release._
 
-[0.1.0]: https://github.com/jotoho/tes-moddingoverlay/releases/tag/0.1.0
+[0.1.0]: https://github.com/jotoho/modfs/releases/tag/0.1.0
+[1.0.0]: https://github.com/jotoho/modfs/releases/tag/1.0.0
+[@jotoho]: https://github.com/jotoho
