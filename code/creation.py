@@ -5,7 +5,7 @@
 from filecmp import cmp
 from pathlib import Path
 from re import IGNORECASE, compile, Pattern
-from shutil import copy, copytree, move, which
+from shutil import copy2, move, which
 from subprocess import run
 from sys import stderr
 from typing import Callable
@@ -91,17 +91,26 @@ def ask_for_path(prompt: str, meets_requirements: Callable[[Path | None], bool])
 
 
 def transfer_mod_files(source_dir: Path, destination_dir: Path, only_copy: bool) -> None:
+    if not source_dir.is_dir():
+        return
+
     for file_or_directory in source_dir.iterdir():
-        if only_copy:
-            if file_or_directory.is_file():
-                copy(file_or_directory, destination_dir)
-            elif file_or_directory.is_dir():
-                copytree(file_or_directory, destination_dir)
+        special_destination = destination_dir / (file_or_directory.relative_to(source_dir))
+        if file_or_directory.is_file():
+            special_destination.parent.mkdir(parents=True, exist_ok=True)
+            if only_copy:
+                copy2(file_or_directory, special_destination, follow_symlinks=True)
             else:
-                print(f"Unrecognized type, neither file nor directory: {str(file_or_directory)}",
-                      file=stderr)
+                if not file_or_directory.is_symlink:
+                    move(file_or_directory, special_destination)
+                else:
+                    copy2(file_or_directory, special_destination, follow_symlinks=True)
+                    file_or_directory.unlink(missing_ok=True)
+        elif file_or_directory.is_dir():
+            transfer_mod_files(file_or_directory, special_destination, only_copy=only_copy)
         else:
-            move(file_or_directory, destination_dir)
+            print(f"Unrecognized type, neither file nor directory: {str(file_or_directory)}",
+                  file=stderr)
 
 
 def extract_archive(archive_file: Path, destination_dir: Path) -> None:
