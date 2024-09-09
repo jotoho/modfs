@@ -201,7 +201,7 @@ def subcommand_import(args: SubcommandArgDict) -> None:
     else:
         print(f"Importing mod {mod_id}")
 
-    source: Path = args["import_path"]
+    source: Path = args["import_path"].resolve(strict=True)
     raw_destination = create_mod_space(mod_id).resolve()
     processed_subdir = process_mod_subdir_argument(args["subdir"],
                                                    mod_id=mod_id,
