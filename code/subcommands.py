@@ -74,7 +74,8 @@ def subcommand_list(args: SubcommandArgDict) -> None:
             exit(1)
         mods_to_process = list(args["modids"]) + get_mod_ids() if args["all"] else args["modids"]
         for mod in sorted(set(mods_to_process)):
-            print(f"{mod}:")
+            isDisabled = not ModConfig(mod).get(ValidModSettings.ENABLED)
+            print(f"{mod}:" + (" (disabled)" if isDisabled else ""))
             versions = get_mod_versions(mod)
             for date, subversions in sorted(versions.items()):
                 first_subversion = True
@@ -90,11 +91,11 @@ def subcommand_list(args: SubcommandArgDict) -> None:
                     if is_latest:
                         tags.add("latest")
                     active_version = ModConfig(mod).get(ValidModSettings.MOD_VERSION)
-                    is_active = ((date, subver) == parse_version_tag(active_version)
-                                 if active_version != "latest"
-                                 else is_latest)
-                    if is_active:
-                        tags.add("active")
+                    is_selected_ver = ((date, subver) == parse_version_tag(active_version)
+                                      if active_version != "latest"
+                                      else is_latest)
+                    if is_selected_ver:
+                        tags.add("selected")
                     print(ver_str, *tags)
     elif args["listtype"] == "priority":
         for mod_id in read_mod_priority().keys():
