@@ -134,6 +134,8 @@ def process_commandline_args() -> Namespace:
                                     action="store_true")
     list_update_parser.add_argument("--exclude-today",
                                     action="store_true")
+    list_update_parser.add_argument("--exclude-disabled",
+                                    action="store_true")
     list_update_parser.add_argument("modids",
                                     nargs="*",
                                     default=[],

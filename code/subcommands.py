@@ -114,7 +114,10 @@ def subcommand_list(args: SubcommandArgDict) -> None:
             exit(1)
         print("The selected mods were last checked for updates on the following dates:")
         listdata: dict[str | None, set[str]] = {}
+        exclude_disabled = args["exclude_today"]
         for mod in mod_list:
+            if exclude_disabled and not ModConfig(mod, args["instance"]).get(ValidModSettings.ENABLED):
+                continue
             date = get_mod_last_update_check(mod)
             if date not in listdata:
                 listdata[date] = set()
