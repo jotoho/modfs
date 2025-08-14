@@ -604,6 +604,7 @@ def subcommand_version(args: SubcommandArgDict) -> None:
     if version_string is None or len(version_string) < 1:
         version_string = "unknown"
     print("modfs version", version_string)
+    print("project home: https://github.com/jotoho/modfs")
 
 
 def subcommand_markuptodate(args: SubcommandArgDict) -> None:
