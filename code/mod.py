@@ -36,7 +36,7 @@ def get_mod_ids(base_dir: Path | None = None) -> list[str]:
     real_base_dir: Path = resolve_base_dir(base_dir)
 
     mod_dirs = list(filter(lambda p: p.is_dir(), (real_base_dir / 'mods').iterdir()))
-    mod_ids = list(map(lambda d: d.parts[-1], mod_dirs))
+    mod_ids = sorted(list(map(lambda d: d.parts[-1], mod_dirs)), key=str.lower)
     return mod_ids
 
 
@@ -45,13 +45,13 @@ def get_mod_versions(mod_id: str, base_dir: Path | None = None) -> dict[str, set
     if not mod_exists(mod_id, real_base_dir):
         raise ValueError(f"Mod {mod_id} does not exist. Cannot lookup versions.")
     mod_dir = (real_base_dir / 'mods' / mod_id).resolve()
-    dated_dirs: list[Path] = list(filter(lambda p: p.is_dir(), mod_dir.iterdir()))
+    dated_dirs: list[Path] = sorted(list(filter(lambda p: p.is_dir(), mod_dir.iterdir())), key=(lambda s: s.name.lower()))
     results: dict[str, set[str]] = dict()
     for dated_dir in sorted(dated_dirs):
         date = dated_dir.parts[-1]
         dated_set: set[str] = results.get(date, set())
-        subversion_dirs = list(filter(lambda p: p.is_dir(), dated_dir.iterdir()))
-        for subversion in sorted(subversion_dirs):
+        subversion_dirs = sorted(list(filter(lambda p: p.is_dir(), dated_dir.iterdir())), key=(lambda s: s.name.lower()))
+        for subversion in subversion_dirs:
             dated_set.add(subversion.parts[-1])
         results[date] = dated_set
     return results
