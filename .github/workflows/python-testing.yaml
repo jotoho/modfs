@@ -20,7 +20,7 @@ jobs:
       matrix:
         python-version: ["3.9", "3.10", "3.11"]
     permissions:
-      pull-request: read
+      pull-requests: read
 
     steps:
     - uses: actions/checkout@v5
