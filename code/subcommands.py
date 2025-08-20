@@ -64,7 +64,7 @@ def subcommand_list(args: SubcommandArgDict) -> None:
     :type args:
     """
     if args["listtype"] == "mods":
-        print("List of installed mods:")
+        print("List of installed mods:", file=stderr)
         for mod in get_mod_ids(args["instance"]):
             print(mod)
     elif args["listtype"] == "versions":
@@ -112,7 +112,7 @@ def subcommand_list(args: SubcommandArgDict) -> None:
         if len(mod_list) <= 0:
             print("You must select one or more mods to list.", file=stderr)
             exit(1)
-        print("The selected mods were last checked for updates on the following dates:")
+        print("The selected mods were last checked for updates on the following dates:", file=stderr)
         listdata: dict[str | None, set[str]] = {}
         exclude_disabled = args["exclude_today"]
         for mod in mod_list:
