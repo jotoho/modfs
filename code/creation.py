@@ -112,6 +112,9 @@ def transfer_mod_files(source_dir: Path, destination_dir: Path, only_copy: bool)
             print(f"Unrecognized type, neither file nor directory: {str(file_or_directory)}",
                   file=stderr)
 
+    if not only_copy and source_dir.is_dir() and not any(source_dir.iterdir()):
+        source_dir.rmdir()
+
 
 def extract_archive(archive_file: Path, destination_dir: Path) -> None:
     extract_commands: dict[Pattern, Callable[[Path, Path], list[str]]] = {
