@@ -27,8 +27,18 @@ jobs:
         with:
           exempt-all-assignees: true
           exempt-all-milestones: true
-          stale-issue-message: "There has been no activity on this issue in a while, and it is not scheduled for remediation. If this continues, the issue will be closed."
-          stale-pr-message: "There has been no activity on this pull request in a while, and it is not scheduled to be considered for merge. If this continues, the pull request will be closed."
+          stale-issue-message: |
+            There has been no detected activity on this issue in a while,
+            it is not scheduled for remediation
+            and it has not been assigned to anyone.
+
+            If that continues, this issue will be automatically closed.
+          stale-pr-message: |
+            There has been no detected activity on this pull request in a while,
+            it is not scheduled to be considered for merging
+            and it has not been assigned to anyone.
+
+            If that continues, this pull request will be automatically closed.
   lockthreads:
     name: Scan and Lock closed threads
     runs-on: ubuntu-latest
@@ -44,5 +54,33 @@ jobs:
       - uses: dessant/lock-threads@v5.0.1
         with:
           issue-inactive-days: '28'
+          issue-comment: |
+            As this closed issue has not had any activity in 4+ weeks,
+            it will now be automatically locked to limit the risk of necroposting or unrelated
+            comments.
+
+            If you have an unresolved identical or similar issue, please look for an unlocked active
+            issue on this topic, or create a new issue if none exist.
+
+            Alternatively, collaborators may (at their discretion) make an exception and lift the lock.
           pr-inactive-days: '28'
+          pr-comment: |
+            As this non-open pull request has not had any activity in 4+ weeks,
+            it will now be automatically locked to limit the risk of necroposting or unrelated
+            comments.
+
+            If you wish to submit a similar contribution, report an issue with the merged code
+            or discuss a related matter, and no active issue/pr/discussion on it exists, please
+            create a new one.
+
+            Alternatively, collaborators may (at their discretion) make an exception and lift the lock.
           discussion-inactive-days: '28'
+          discussion-comment: |
+            As this closed discussion has not had any activity in 4+ weeks,
+            it will now be automatically locked to limit the risk of necroposting or unrelated
+            comments.
+
+            If you have an unanswered question or believe this topic needs to be revisited,
+            please consider making a new discussion, if no active one exists.
+
+            Alternatively, collaborators may (at their discretion) make an exception and lift the lock.
