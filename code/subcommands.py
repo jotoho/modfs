@@ -71,10 +71,10 @@ def subcommand_list(args: SubcommandArgDict) -> None:
     if args["listtype"] == "mods":
         print("List of installed mods:", file=stderr)
         for mod in get_mod_ids(args["instance"]):
-            mod = ModConfig(mod).get(ValidModSettings.ENABLED)
-            if args["only_enabled"] and not mod:
+            mod_is_enabled = ModConfig(mod).get(ValidModSettings.ENABLED)
+            if args["only_enabled"] and not mod_is_enabled:
                 continue
-            elif args["only_disabled"] and mod:
+            elif args["only_disabled"] and mod_is_enabled:
                 continue
             print(mod)
     elif args["listtype"] == "versions":
