@@ -124,12 +124,10 @@ def process_commandline_args() -> Namespace:
                                                   help="List all installed mods")
 
     list_mods_parser.add_argument("--only-enabled",
-                                  formatter_class=ArgumentDefaultsHelpFormatter,
                                   help="Only show mods which are currently enabled.",
                                   action="store_true",
                                   type=bool)
     list_mods_parser.add_argument("--only-disabled",
-                                  formatter_class=ArgumentDefaultsHelpFormatter,
                                   help="Only show mods which are currently disabled.",
                                   action="store_true",
                                   type=bool)
@@ -139,12 +137,10 @@ def process_commandline_args() -> Namespace:
                                                       help="List installed mods in order of increasing priority")
 
     list_priority_parser.add_argument("--only-enabled",
-                                      formatter_class=ArgumentDefaultsHelpFormatter,
                                       help="Only show mods which are currently enabled.",
                                       action="store_true",
                                       type=bool)
     list_priority_parser.add_argument("--only-disabled",
-                                      formatter_class=ArgumentDefaultsHelpFormatter,
                                       help="Only show mods which are currently disabled.",
                                       action="store_true",
                                       type=bool)
@@ -159,11 +155,9 @@ def process_commandline_args() -> Namespace:
                                     action="store_true")
     list_update_parser.add_argument("--exclude-today",
                                     action="store_true",
-                                    formatter_class=ArgumentDefaultsHelpFormatter,
                                     help="Don't show mods which have been updated or marked as up to date today",
                                     type=bool)
     list_update_parser.add_argument("--exclude-disabled",
-                                    formatter_class=ArgumentDefaultsHelpFormatter,
                                     action="store_true",
                                     help="Don't show mods which are currently disabled",
                                     type=bool)
@@ -176,17 +170,14 @@ def process_commandline_args() -> Namespace:
                                                      help="List the mods")
     list_version_parser.add_argument("--all",
                                      action="store_true",
-                                     formatter_class=ArgumentDefaultsHelpFormatter,
                                      help="Show all mods",
                                      type=bool)
     list_version_parser.add_argument("--show-enabled",
                                      action="store_true",
                                      type=bool,
-                                     formatter_class=ArgumentDefaultsHelpFormatter,
                                      help="Show all enabled mods")
     list_version_parser.add_argument("--show-disabled",
                                      action="store_true",
-                                     formatter_class=ArgumentDefaultsHelpFormatter,
                                      help="Show all disabled mods",
                                      type=bool)
     list_version_parser.add_argument("modids",
