@@ -117,13 +117,38 @@ def process_commandline_args() -> Namespace:
     list_parser = subparsers.add_parser("list",
                                         formatter_class=ArgumentDefaultsHelpFormatter,
                                         help="List known resources")
-    list_subparsers = list_parser.add_subparsers(dest="listtype", required=True)
-    list_subparsers.add_parser("mods",
-                               formatter_class=ArgumentDefaultsHelpFormatter,
-                               help="List all installed mods")
-    list_subparsers.add_parser("priority",
-                               formatter_class=ArgumentDefaultsHelpFormatter,
-                               help="List installed mods in order of increasing priority")
+    list_subparsers = list_parser.add_subparsers(
+        dest="listtype", required=True)
+    list_mods_parser = list_subparsers.add_parser("mods",
+                                                  formatter_class=ArgumentDefaultsHelpFormatter,
+                                                  help="List all installed mods")
+
+    list_mods_parser.add_argument("--only-enabled",
+                                  formatter_class=ArgumentDefaultsHelpFormatter,
+                                  help="Only show mods which are currently enabled.",
+                                  action="store_true",
+                                  type=bool)
+    list_mods_parser.add_argument("--only-disabled",
+                                  formatter_class=ArgumentDefaultsHelpFormatter,
+                                  help="Only show mods which are currently disabled.",
+                                  action="store_true",
+                                  type=bool)
+
+    list_priority_parser = list_subparsers.add_parser("priority",
+                                                      formatter_class=ArgumentDefaultsHelpFormatter,
+                                                      help="List installed mods in order of increasing priority")
+
+    list_priority_parser.add_argument("--only-enabled",
+                                      formatter_class=ArgumentDefaultsHelpFormatter,
+                                      help="Only show mods which are currently enabled.",
+                                      action="store_true",
+                                      type=bool)
+    list_priority_parser.add_argument("--only-disabled",
+                                      formatter_class=ArgumentDefaultsHelpFormatter,
+                                      help="Only show mods which are currently disabled.",
+                                      action="store_true",
+                                      type=bool)
+
     list_subparsers.add_parser("conflicts",
                                formatter_class=ArgumentDefaultsHelpFormatter,
                                help="List possible conflicts between all installed mods")
@@ -133,9 +158,15 @@ def process_commandline_args() -> Namespace:
     list_update_parser.add_argument("--all",
                                     action="store_true")
     list_update_parser.add_argument("--exclude-today",
-                                    action="store_true")
+                                    action="store_true",
+                                    formatter_class=ArgumentDefaultsHelpFormatter,
+                                    help="Don't show mods which have been updated or marked as up to date today",
+                                    type=bool)
     list_update_parser.add_argument("--exclude-disabled",
-                                    action="store_true")
+                                    formatter_class=ArgumentDefaultsHelpFormatter,
+                                    action="store_true",
+                                    help="Don't show mods which are currently disabled",
+                                    type=bool)
     list_update_parser.add_argument("modids",
                                     nargs="*",
                                     default=[],
@@ -144,7 +175,20 @@ def process_commandline_args() -> Namespace:
                                                      formatter_class=ArgumentDefaultsHelpFormatter,
                                                      help="List the mods")
     list_version_parser.add_argument("--all",
-                                     action="store_true")
+                                     action="store_true",
+                                     formatter_class=ArgumentDefaultsHelpFormatter,
+                                     help="Show all mods",
+                                     type=bool)
+    list_version_parser.add_argument("--show-enabled",
+                                     action="store_true",
+                                     type=bool,
+                                     formatter_class=ArgumentDefaultsHelpFormatter,
+                                     help="Show all enabled mods")
+    list_version_parser.add_argument("--show-disabled",
+                                     action="store_true",
+                                     formatter_class=ArgumentDefaultsHelpFormatter,
+                                     help="Show all disabled mods",
+                                     type=bool)
     list_version_parser.add_argument("modids",
                                      nargs='*',
                                      default=[],

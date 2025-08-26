@@ -55,6 +55,11 @@ class SubcommandArgDict(TypedDict, total=False):
     attribute: NotRequired[Literal["author", "name", "note", "link"]]
     value: NotRequired[str]
     exclude_today: NotRequired[bool]
+    exclude_disabled: NotRequired[bool]
+    show_enabled: NotRequired[bool]
+    show_disabled: NotRequired[bool]
+    only_enabled: NotRequired[bool]
+    only_disabled: NotRequired[bool]
 
 
 def subcommand_list(args: SubcommandArgDict) -> None:
@@ -66,13 +71,28 @@ def subcommand_list(args: SubcommandArgDict) -> None:
     if args["listtype"] == "mods":
         print("List of installed mods:", file=stderr)
         for mod in get_mod_ids(args["instance"]):
+            mod = ModConfig(mod).get(ValidModSettings.ENABLED)
+            if args["only_enabled"] and not mod:
+                continue
+            elif args["only_disabled"] and mod:
+                continue
             print(mod)
     elif args["listtype"] == "versions":
-        if not args["all"] and len(args["modids"]) == 0:
+        if not (args["all"] or args["show_enabled"] or args["show_disabled"]) and len(args["modids"]) == 0:
             print("You need to specify mods or give the --all flag to list versions.",
                   file=stderr)
             exit(1)
-        mods_to_process = list(args["modids"]) + get_mod_ids() if args["all"] else args["modids"]
+        mods_to_process = list(args["modids"])
+        if args["all"]:
+            mods_to_process += get_mod_ids()
+
+        if args["show_enabled"]:
+            mods_to_process += [id for id in get_mod_ids()
+                                if ModConfig(id).get(ValidModSettings.ENABLED)]
+        if args["show_disabled"]:
+            mods_to_process += [id for id in get_mod_ids()
+                                if not ModConfig(id).get(ValidModSettings.ENABLED)]
+
         for mod in sorted(set(mods_to_process)):
             isDisabled = not ModConfig(mod).get(ValidModSettings.ENABLED)
             print(f"{mod}:" + (" (disabled)" if isDisabled else ""))
@@ -99,6 +119,11 @@ def subcommand_list(args: SubcommandArgDict) -> None:
                     print(ver_str, *tags)
     elif args["listtype"] == "priority":
         for mod_id in read_mod_priority().keys():
+            mod_is_enabled = ModConfig(mod_id).get(ValidModSettings.ENABLED)
+            if args["only_enabled"] and not mod_is_enabled:
+                continue
+            elif args["only_disabled"] and mod_is_enabled:
+                continue
             print(mod_id)
     elif args["listtype"] == "conflicts":
         for mods, files in parse_mod_conflicts().items():
@@ -109,6 +134,11 @@ def subcommand_list(args: SubcommandArgDict) -> None:
         mod_list: set[str] = set(args["modids"])
         if args["all"]:
             mod_list |= set(get_mod_ids())
+
+        if args["exclude_disabled"]:
+            mod_list -= set([id for id in get_mod_ids()
+                            if not ModConfig(id).get(ValidModSettings.ENABLED)])
+
         if len(mod_list) <= 0:
             print("You must select one or more mods to list.", file=stderr)
             exit(1)
