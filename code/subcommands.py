@@ -126,8 +126,9 @@ def subcommand_list(args: SubcommandArgDict) -> None:
                 continue
             print(mod_id)
     elif args["listtype"] == "conflicts":
+        priority_list = read_mod_priority().keys()
         for mods, files in parse_mod_conflicts().items():
-            print(set(mods))
+            print(str(sorted(set(mods))) + " ➔ " + list(filter(lambda m: m in mods, priority_list))[-1])
             for file in files:
                 print((" " * 4) + str(file))
     elif args["listtype"] == "updatecheck":
