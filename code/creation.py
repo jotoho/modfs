@@ -35,8 +35,9 @@ def create_mod_space(mod_id: str, base_dir: Path | None = None) -> Path:
 def recursive_lower_case_rename(current_path: Path) -> None:
     if current_path is None or not isinstance(current_path, Path) or not current_path.is_dir():
         return
-    if get_instance_settings().get(ValidInstanceSettings.DISABLE_FORCED_LOWERCASE_FILES):
-        print("Warning: Suppressed lowercase renaming on path " + str(current_path), file=stderr)
+
+    case_folding_mode = get_instance_settings().get(ValidInstanceSettings.FILES_CASING_POLICY)
+    if case_folding_mode == "none":
         return
 
     # print("Processing all entries in directory: " + str(currentPath))
@@ -57,7 +58,8 @@ def recursive_lower_case_rename(current_path: Path) -> None:
             else:
                 assert element.exists()
                 assert element.is_dir() or element.is_file()
-                element.rename(new_path)
+                if case_folding_mode == "all" or (case_folding_mode == "folders" and element.is_dir()):
+                    element.rename(new_path)
         else:
             print("FATAL: for loop emitted invalid path!",
                   file=stderr)

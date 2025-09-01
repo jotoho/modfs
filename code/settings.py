@@ -83,11 +83,10 @@ class ValidInstanceSettings(Enum):
                                       False,
                                       [],
                                       True)
-    DISABLE_FORCED_LOWERCASE_FILES = ("suppressLowercaseRenaming",
-                                      bool,
-                                      False,
-                                      [],
-                                      True)
+    FILES_CASING_POLICY = ("normalizeCase",
+                           str,
+                           "all",
+                           [lambda s: s in ["all", "folders", "none"]])
 
 
 class InstanceSettings:
