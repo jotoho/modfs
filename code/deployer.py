@@ -5,11 +5,13 @@
 from collections import OrderedDict
 from pathlib import Path
 from subprocess import call
+from pprint import pp
 
 from psutil import disk_partitions
 
 from code.mod import get_mod_mount_path
 from code.settings import InstanceSettings, ValidInstanceSettings, get_instance_settings
+from code.commandline import get_instance_path
 
 
 def are_paths_on_same_filesystem(path1: Path, path2: Path) -> bool:
@@ -75,6 +77,9 @@ def deploy_filesystem(target_dir: Path,
             print("work directory must be on the same filesystem as target",
                   file=stderr)
             exit(1)
+        print("Lower directories:")
+        print(mod_dirs.replace(":", "\n").replace(str(get_instance_path()), "."))
+        print()
         command = ["fuse-overlayfs",
                    "-o", "volatile",
                    "-o", "noacl",
@@ -85,7 +90,8 @@ def deploy_filesystem(target_dir: Path,
                    "-o", f"workdir={work_dir}",
                    "-o", f"upperdir={overflow_dir}",
                    str(target_dir)]
-        print(command)
+        print("Command:")
+        pp([s if not s.startswith("lowerdir=") else "lowerdir=\u2026" for s in command], compact=True)
         call(command)
     else:
         from sys import stderr
