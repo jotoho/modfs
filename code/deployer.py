@@ -76,6 +76,11 @@ def deploy_filesystem(target_dir: Path,
                   file=stderr)
             exit(1)
         command = ["fuse-overlayfs",
+                   "-o", "volatile",
+                   "-o", "noacl",
+                   "-o", "nodev",
+                   "-o", "nosuid",
+                   "-o", "noatime",
                    "-o", f"lowerdir={mod_dirs}",
                    "-o", f"workdir={work_dir}",
                    "-o", f"upperdir={overflow_dir}",
