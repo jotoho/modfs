@@ -21,7 +21,6 @@ jobs:
       discussions: write
     concurrency:
       group: stale
-      cancel-in-progress: true
     steps:
       - uses: actions/stale@v10.0.0
         with:
@@ -49,7 +48,6 @@ jobs:
       discussions: write
     concurrency:
       group: lockthreads
-      cancel-in-progress: true
     steps:
       - uses: dessant/lock-threads@v5.0.1
         with:
