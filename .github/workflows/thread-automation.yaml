@@ -23,7 +23,7 @@ jobs:
       group: stale
       cancel-in-progress: true
     steps:
-      - uses: actions/stale@v9.1.0
+      - uses: actions/stale@v10.0.0
         with:
           exempt-all-assignees: true
           exempt-all-milestones: true
