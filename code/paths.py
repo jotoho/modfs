@@ -22,3 +22,21 @@ def get_meta_directory(instance_dir: Path) -> Path:
         return old_path_spec
     else:
         return new_path_spec
+
+def get_all_files(containing_dir: Path) -> set[Path]:
+    result = set()
+    if isinstance(containing_dir, Path) and containing_dir.is_dir(follow_symlinks=False):
+        for child in containing_dir.iterdir():
+            if child.is_file(follow_symlinks=False):
+                result.add(child)
+            elif child.is_dir(follow_symlinks=False):
+                result |= get_all_files(child)
+    return result
+
+def trim_emptied_directory(directory_path: Path) -> None:
+    if not isinstance(directory_path, Path) or not directory_path.is_dir(follow_symlinks=False):
+        return
+    if not any(directory_path.iterdir()):
+        parent_dir = directory_path.parent
+        directory_path.rmdir()
+        trim_emptied_directory(parent_dir)

@@ -228,6 +228,9 @@ def process_commandline_args() -> Namespace:
                                             help="""
         List of ids of installed mods to process
     """)
+    repair_subparser.add_parser("cleanoverflow",
+                                formatter_class=ArgumentDefaultsHelpFormatter,
+                                help="Deletes all files from the overflow directory that are present in any installed mod version")
     dev_parser = subparsers.add_parser("developer")
     dev_subparsers = dev_parser.add_subparsers(dest="developer_action", required=True)
     dev_blank_mod = dev_subparsers.add_parser("create-blank-mod")

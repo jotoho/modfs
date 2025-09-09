@@ -312,6 +312,39 @@ def subcommand_repair(args: SubcommandArgDict) -> None:
                 recursive_lower_case_rename(overflow_dir)
     elif args["repairaction"] == "filepriority":
         write_mod_priority(read_mod_priority())
+    elif args["repairaction"] == "cleanoverflow":
+        from code.mod import resolve_base_dir
+        from code.paths import get_all_files, trim_emptied_directory
+        from code.deployer import is_fuse_overlayfs_mounted
+        from hashlib import sha3_512, file_digest
+        deployment_target_dir = get_instance_settings().get(ValidInstanceSettings.DEPLOYMENT_TARGET_DIR)
+        if is_fuse_overlayfs_mounted(deployment_target_dir):
+            print("Cannot safely clean overflow directory while the filesystem is active. Aborting to prevent data loss!", file=stderr)
+            exit(1)
+        def hashfile(path: Path) -> str:
+            with path.open(mode='rb') as f:
+                return file_digest(f, sha3_512).hexdigest()
+        print("Generating hashes for all installed game and mod files...")
+        installed_file_hashes = frozenset(
+            map(
+                hashfile,
+                get_all_files(resolve_base_dir() / 'mods') | get_all_files(deployment_target_dir)
+            )
+        )
+        print("Successfully calculated " + str(len(installed_file_hashes)) + " file hashes")
+        numDeleted = 0
+        for overflow_file in get_all_files(get_instance_settings().get(ValidInstanceSettings.FILESYSTEM_OVERFLOW_DIR)):
+            if overflow_file.is_file():
+                with overflow_file.open(mode='rb') as f:
+                    hash = file_digest(f, sha3_512).hexdigest()
+                    f.close()
+                    if hash in installed_file_hashes:
+                        parent_dir = overflow_file.parent
+                        print("Deleting " + str(overflow_file))
+                        overflow_file.unlink(missing_ok=True)
+                        numDeleted += 1
+                        trim_emptied_directory(parent_dir)
+        print("Overflow directory has been cleaned of {} files.".format(numDeleted))
     else:
         print("Unknown repair action", file=stderr)
         exit(1)
