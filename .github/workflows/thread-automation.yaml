@@ -15,6 +15,7 @@ jobs:
   stale:
     name: Process stale threads
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       issues: write
       pull-requests: write
@@ -41,6 +42,7 @@ jobs:
   lockthreads:
     name: Scan and Lock closed threads
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: github.event_name == 'schedule'
     permissions:
       issues: write

@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2020-2023 https://github.com/amannn/action-semantic-pull-request contributors
+# SPDX-FileCopyrightText: 2025 Jonas Tobias Hopusch <git@jotoho.de>
 # SPDX-License-Identifier: MIT
 
 name: "Lint PR"
@@ -17,6 +18,7 @@ jobs:
   main:
     name: Validate PR title
     runs-on: ubuntu-latest
+    timeout-minutes: 1
     steps:
       - uses: amannn/action-semantic-pull-request@v6
         env:

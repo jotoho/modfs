@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2022 Free Software Foundation Europe e.V. <https://fsfe.org>
+# SPDX-FileCopyrightText: 2025 Jonas Tobias Hopusch <git@jotoho.de>
 #
 # SPDX-License-Identifier: CC0-1.0
 
@@ -9,6 +10,7 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       pull-requests: read
     steps:
