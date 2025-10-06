@@ -23,7 +23,7 @@ jobs:
     concurrency:
       group: stale
     steps:
-      - uses: actions/stale@v10.0.0
+      - uses: actions/stale@v10.1.0
         with:
           exempt-all-assignees: true
           exempt-all-milestones: true
