@@ -4,12 +4,21 @@
 name: 'Process Github Threads'
 
 on:
-  schedule:
-    - cron: '0 0 * * *'
   issues:
-    types: [assigned, milestoned]
+    types: [created, assigned, unassigned, milestoned, demilestoned]
+  issue_comment:
+    types: [created]
   pull_request:
-    types: [assigned, milestoned]
+    types: [created, assigned, unassigned, milestoned, demilestoned]
+  pull_request_review:
+    types: [submitted]
+  discussion:
+    types: [created]
+  discussion_comment:
+    types: [created]
+  release:
+    types: [published]
+  workflow_dispatch:
 
 jobs:
   stale:
@@ -43,7 +52,6 @@ jobs:
     name: Scan and Lock closed threads
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: github.event_name == 'schedule'
     permissions:
       issues: write
       pull-requests: write
