@@ -250,6 +250,10 @@ def subcommand_import(args: SubcommandArgDict) -> None:
 
     if source.is_dir():
         transfer_mod_files(source, destination, only_copy)
+        unspool_dir = source.parent
+        while not only_copy and unspool_dir.is_dir() and not any(unspool_dir.iterdir()) and not Path.cwd().samefile(unspool_dir):
+            unspool_dir.rmdir()
+            unspool_dir = unspool_dir.parent
     elif source.is_file():
         with TemporaryDirectory() as tmpdir_str:
             tmpdir = Path(tmpdir_str)
