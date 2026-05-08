@@ -269,6 +269,7 @@ def subcommand_import(args: SubcommandArgDict) -> None:
         print("internal logic error: source is neither file nor directory", file=stderr)
         exit(1)
     recursive_lower_case_rename(raw_destination)
+    print(f"Successfully installed {mod_id} into {destination}")
 
     cfg = ModConfig(mod_id)
     cfg.set(ValidModSettings.LAST_UPDATE_CHECK, current_date())
