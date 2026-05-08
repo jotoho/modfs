@@ -6,6 +6,7 @@ from collections import OrderedDict
 from pathlib import Path
 from subprocess import call
 from pprint import pp
+from sys import exit
 
 from psutil import disk_partitions
 
@@ -92,7 +93,7 @@ def deploy_filesystem(target_dir: Path,
                    str(target_dir)]
         print("Command:")
         pp([s if not s.startswith("lowerdir=") else "lowerdir=\u2026" for s in command], compact=True)
-        call(command)
+        exit(call(command))
     else:
         from sys import stderr
         print("Something is already mounted at the destination!", file=stderr)
@@ -101,7 +102,7 @@ def deploy_filesystem(target_dir: Path,
 
 def stop_filesystem(target_dir: Path) -> None:
     if is_fuse_overlayfs_mounted(target_dir):
-        call(["fusermount3", "-u", str(target_dir.resolve())])
+        exit(call(["fusermount3", "-u", str(target_dir.resolve())]))
     else:
         from sys import stderr
         print("Attempted to stop a filesystem that is not running", file=stderr)
