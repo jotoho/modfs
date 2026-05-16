@@ -2,25 +2,17 @@
 #
 # SPDX-FileCopyrightText: 2023 Jonas Tobias Hopusch <git@jotoho.de>
 # SPDX-License-Identifier: AGPL-3.0-only
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, Namespace
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, Namespace, REMAINDER
 from os import getcwd
 from pathlib import Path
 
 from code.mod import cast_validate_mod_id
 from code.settings import InstanceSettings, ValidInstanceSettings
+from code.instancepath import get_instance_path
 
 
-def get_instance_path() -> Path:
-    # Create a parser just for the early value
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument("--instance",
-                        type=Path,
-                        default=Path(getcwd()),
-                        help="The instance to run your commands on. Defaults to current working "
-                             "directory.")
-    args, _ = parser.parse_known_args()
-    return args.instance
-
+def get_pid_path() -> Path:
+    return get_instance_path() / 'ns-pid.txt'
 
 def process_commandline_args() -> Namespace:
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
@@ -47,18 +39,18 @@ def process_commandline_args() -> Namespace:
         directory, which forwards commands to modfs. Currently not
         implemented.
     """)
-    subparsers.add_parser("activate",
-                          aliases=["on"],
-                          formatter_class=ArgumentDefaultsHelpFormatter,
-                          help="Deploy filesystem")
-    subparsers.add_parser("deactivate",
-                          aliases=["off"],
-                          formatter_class=ArgumentDefaultsHelpFormatter,
-                          help="Stop filesystem deployment")
-    enable_parser = subparsers.add_parser("enable")
+    run_parser = subparsers.add_parser("run",
+                                       formatter_class=ArgumentDefaultsHelpFormatter,
+                                       help="Run a command with the modded filesystem")
+    run_parser.add_argument("command",
+                            action='store',
+                            type=str,
+                            nargs=REMAINDER,
+                            help="the bash command to execute within the virtual environment")
+    enable_parser = subparsers.add_parser("enable", help="Enables a mod")
     enable_parser.add_argument("mod_id",
                                type=cast_validate_mod_id)
-    disable_parser = subparsers.add_parser("disable")
+    disable_parser = subparsers.add_parser("disable", help="Disables a mod")
     disable_parser.add_argument("mod_id",
                                 type=cast_validate_mod_id)
     config_parser = subparsers.add_parser("config",
@@ -81,9 +73,6 @@ def process_commandline_args() -> Namespace:
                                  formatter_class=ArgumentDefaultsHelpFormatter,
                                  help="Show list of all valid setting ids")
     config_unset_parser.add_argument("setting_id")
-    subparsers.add_parser("status",
-                          formatter_class=ArgumentDefaultsHelpFormatter,
-                          help="Show statistics and other helpful information.")
     import_parser = subparsers.add_parser("import",
                                           help="Import a foreign directory as a mod",
                                           formatter_class=ArgumentDefaultsHelpFormatter)
@@ -231,18 +220,18 @@ def process_commandline_args() -> Namespace:
     repair_subparser.add_parser("cleanoverflow",
                                 formatter_class=ArgumentDefaultsHelpFormatter,
                                 help="Deletes all files from the overflow directory that are present in any installed mod version")
-    dev_parser = subparsers.add_parser("developer")
+    dev_parser = subparsers.add_parser("developer", help="Advanced unstable subcommands for developers")
     dev_subparsers = dev_parser.add_subparsers(dest="developer_action", required=True)
     dev_blank_mod = dev_subparsers.add_parser("create-blank-mod")
     dev_blank_mod.add_argument("mod_id")
-    mod_parser = subparsers.add_parser("mod")
+    mod_parser = subparsers.add_parser("mod", help="Inspect or edit mod metadata")
     mod_parser.add_argument("mod_id")
     mod_action_parsers = mod_parser.add_subparsers(dest="mod_action", required=True)
     mod_set_parser = mod_action_parsers.add_parser("set")
     mod_set_parser.add_argument("attribute", choices={"author", "name", "note", "link"})
     mod_set_parser.add_argument("value")
     mod_action_parsers.add_parser("info")
-    markuptodate_parser = subparsers.add_parser("markuptodate")
+    markuptodate_parser = subparsers.add_parser("markuptodate", help="Mark that you have verified there are currently no newer versions for a mod")
     markuptodate_parser.add_argument("modids",
                                      nargs='+',
                                      default=[],

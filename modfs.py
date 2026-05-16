@@ -47,7 +47,7 @@ def main() -> None:
     args: SubcommandArgDict = vars(process_commandline_args())
     if args["show_args"]:
         from pprint import pprint
-        pprint(vars(args))
+        pprint(args)
 
     exec_dir = execution_path_dir()
     args["version_string"] = get_git_version(exec_dir

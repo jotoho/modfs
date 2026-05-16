@@ -10,6 +10,7 @@ from typing import *
 
 from code.mod import meets_requirements
 from code.paths import get_meta_directory
+from code.instancepath import get_instance_path
 
 TSetting = TypeVar("TSetting")
 
@@ -87,6 +88,18 @@ class ValidInstanceSettings(Enum):
                            str,
                            "all",
                            [lambda s: s in ["all", "folders", "none"]])
+    NAMESPACE_HELPER_LIFETIME_SECS = ("namespaceHelperLifetimeSeconds",
+                                      int,
+                                      30,
+                                      [lambda i: i >= 1 and i <= 3600])
+    MOUNT_SYMLINKS_DIR = ("mountLinksDir",
+                          Path,
+                          get_instance_path() / 'links',
+                          [])
+    MOUNT_CHUNKS_DIR = ("mountChunksDir",
+                        Path,
+                        get_instance_path() / 'chunks',
+                        [])
 
 
 class InstanceSettings:

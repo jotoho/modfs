@@ -13,8 +13,7 @@ from code.mod import mod_change_activation, ModConfig, ValidModSettings, mod_exi
     process_mod_subdir_argument, get_mod_last_update_check
 from code.creation import create_mod_space, recursive_lower_case_rename, ask_for_path, \
     transfer_mod_files, extract_archive
-from code.deployer import deploy_filesystem, stop_filesystem, are_paths_on_same_filesystem, \
-    is_fuse_overlayfs_mounted
+from code.deployer import run_in_filesystem, are_paths_on_same_filesystem
 from code.mod import get_mod_ids, get_mod_versions, select_latest_version, validate_mod_id, \
     mod_at_version_limit, write_mod_priority, read_mod_priority, build_mod_order, \
     parse_mod_conflicts, version_exists, parse_version_tag
@@ -60,6 +59,7 @@ class SubcommandArgDict(TypedDict, total=False):
     show_disabled: NotRequired[bool]
     only_enabled: NotRequired[bool]
     only_disabled: NotRequired[bool]
+    command: NotRequired[str]
 
 
 def subcommand_list(args: SubcommandArgDict) -> None:
@@ -166,7 +166,7 @@ def subcommand_list(args: SubcommandArgDict) -> None:
                 print((12 * " ") + mod)
 
 
-def subcommand_activate(args: SubcommandArgDict) -> None:
+def subcommand_run(args: SubcommandArgDict) -> None:
     """
 
     :param args:
@@ -194,25 +194,7 @@ def subcommand_activate(args: SubcommandArgDict) -> None:
         if version_to_use is None:
             continue
         mods_to_deploy[mod] = version_to_use
-    deploy_filesystem(deployment_directory, mods_to_deploy)
-
-
-def subcommand_deactivate(args: SubcommandArgDict) -> None:
-    """
-
-    :param args:
-    :type args:
-    """
-    deployment_directory = InstanceSettings(args["instance"]).get(
-        ValidInstanceSettings.DEPLOYMENT_TARGET_DIR)
-    if deployment_directory is None:
-        from sys import stderr
-        print("""
-            No deployment directory has been configured for this instance. Cannot deactivate.
-        """.strip(), file=stderr)
-        exit(1)
-    else:
-        stop_filesystem(deployment_directory)
+    run_in_filesystem(deployment_directory, mods_to_deploy, args["command"])
 
 
 def subcommand_import(args: SubcommandArgDict) -> None:
@@ -473,24 +455,6 @@ Do not use them unless you know what you're doing or are following instructions 
         print("Created directory:", create_mod_space(args["mod_id"]))
 
 
-def subcommand_status(_: SubcommandArgDict) -> None:
-    """
-
-    :param _:
-    :type _:
-    """
-    target_dir_setting = ValidInstanceSettings.DEPLOYMENT_TARGET_DIR
-    assert target_dir_setting.value_type == Path
-    target_dir: Path | None = get_instance_settings().get(target_dir_setting)
-
-    if target_dir is None:
-        print("target directory is unknown")
-    elif is_fuse_overlayfs_mounted(target_dir):
-        print("filesystem is active on path " + str(target_dir))
-    else:
-        print("filesystem is not active")
-
-
 def subcommand_config(args: SubcommandArgDict) -> None:
     """
 
@@ -694,11 +658,7 @@ def get_subcommands_table() -> dict[str, Callable[[SubcommandArgDict], None]]:
     """
     return {
         "list": subcommand_list,
-        "activate": subcommand_activate,
-        "on": subcommand_activate,
-        "deactivate": subcommand_deactivate,
-        "off": subcommand_deactivate,
-        "status": subcommand_status,
+        "run": subcommand_run,
         "import": subcommand_import,
         "repair": subcommand_repair,
         "init": subcommand_init,
