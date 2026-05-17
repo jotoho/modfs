@@ -373,10 +373,6 @@ def subcommand_reorder(args: SubcommandArgDict) -> None:
     :param args:
     :type args:
     """
-    if is_fuse_overlayfs_mounted():
-        print("You cannot reorder mods while the filesystem is active!",
-              file=stderr)
-        exit(1)
 
     type_operation = Literal["before", "after", "highest", "lowest"]
     reorder_operation: type_operation | None = args["reorder_operation"]
