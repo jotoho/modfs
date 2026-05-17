@@ -130,7 +130,8 @@ def run_in_filesystem(target_dir: Path,
         command_str = "'" + reduce(lambda s1,s2: s1+"' '"+s2, command) + "'"
         print("Executing: " + command_str)
         print(command_str, file=cmdrelay)
-        print("umount --lazy --read-only '" + str(target_dir) + "'", file=cmdrelay)
+        print("umount --lazy '" + str(target_dir) + "'", file=cmdrelay)
+        print("rm -rf '" + str(work_dir) + "/'*", file=cmdrelay)
     exit_code = namespace_proc.wait()
 
     clean_old_links(link_dir_base)
