@@ -5,7 +5,7 @@
 """
 from collections import OrderedDict
 from pathlib import Path
-from sys import stderr
+from sys import stderr, stdout
 from tempfile import TemporaryDirectory
 from typing import Callable, Literal, TypedDict, NotRequired, Required
 
@@ -76,7 +76,13 @@ def subcommand_list(args: SubcommandArgDict) -> None:
                 continue
             elif args["only_disabled"] and mod_is_enabled:
                 continue
-            print(mod)
+            if mod_is_enabled:
+                print(mod)
+            else:
+                if stdout.isatty():
+                    print("\033[90m" + mod + "\033[0m")
+                else:
+                    print(mod + " [D]")
     elif args["listtype"] == "versions":
         if not (args["all"] or args["show_enabled"] or args["show_disabled"]) and len(args["modids"]) == 0:
             print("You need to specify mods or give the --all flag to list versions.",
