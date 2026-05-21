@@ -8,6 +8,10 @@ from pathlib import Path
 from sys import stderr, stdout
 from tempfile import TemporaryDirectory
 from typing import Callable, Literal, TypedDict, NotRequired, Required
+from os import get_terminal_size
+from functools import reduce
+from math import ceil
+from pprint import pp
 
 from code.mod import mod_change_activation, ModConfig, ValidModSettings, mod_exists, \
     process_mod_subdir_argument, get_mod_last_update_check
@@ -69,18 +73,32 @@ def subcommand_list(args: SubcommandArgDict) -> None:
     :type args:
     """
     if args["listtype"] == "mods":
-        print("List of installed mods:", file=stderr)
-        for mod in get_mod_ids(args["instance"]):
-            mod_is_enabled = ModConfig(mod).get(ValidModSettings.ENABLED)
-            if args["only_enabled"] and not mod_is_enabled:
-                continue
-            elif args["only_disabled"] and mod_is_enabled:
-                continue
-            if mod_is_enabled:
-                print(mod)
-            else:
-                if stdout.isatty():
-                    print("\033[90m" + mod + "\033[0m")
+        mod_ids = get_mod_ids(args["instance"])
+        if args["only_enabled"] and args["only_disabled"]:
+            print("ERROR: --only-enabled and --only-disabled flags are mutually exclusive.", file=stderr)
+            exit(1)
+        elif args["only_enabled"]:
+            mod_ids = list(filter(lambda s: ModConfig(s).get(ValidModSettings.ENABLED), mod_ids))
+        elif args["only_disabled"]:
+            mod_ids = list(filter(lambda s: not ModConfig(s).get(ValidModSettings.ENABLED), mod_ids))
+
+        if stdout.isatty():
+            modid_space = reduce(lambda a,s: max(a, len(s) + 1), mod_ids, 1)
+            term_width = get_terminal_size()[0]
+            num_cols = term_width // modid_space
+            num_rows = ceil(len(mod_ids) / num_cols)
+            columns = [mod_ids[i : i + num_rows] for i in range(0, len(mod_ids), num_rows)]
+            for row in [[column[idx_row] for column in columns if idx_row <= len(column) - 1]
+                        for idx_row in range(num_rows)]:
+                for mod in row:
+                    mod_is_enabled = ModConfig(mod).get(ValidModSettings.ENABLED)
+                    mod_formatted = mod if mod_is_enabled else "\033[90m" + mod + "\033[0m"
+                    padding = ' ' * (modid_space - len(mod)) if mod is not row[-1] else "\n"
+                    print(mod_formatted, end=padding)
+        else:
+            for mod in mod_ids:
+                if ModConfig(mod).get(ValidModSettings.ENABLED):
+                    print(mod)
                 else:
                     print(mod + " [D]")
     elif args["listtype"] == "versions":
