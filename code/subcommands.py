@@ -85,7 +85,7 @@ def subcommand_list(args: SubcommandArgDict) -> None:
         if stdout.isatty():
             modid_space = reduce(lambda a,s: max(a, len(s) + 1), mod_ids, 1)
             term_width = get_terminal_size()[0]
-            num_cols = term_width // modid_space
+            num_cols = max(1, term_width // modid_space)
             num_rows = ceil(len(mod_ids) / num_cols)
             columns = [mod_ids[i : i + num_rows] for i in range(0, len(mod_ids), num_rows)]
             for row in [[column[idx_row] for column in columns if idx_row <= len(column) - 1]
