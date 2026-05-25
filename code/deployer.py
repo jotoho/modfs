@@ -131,6 +131,8 @@ def run_in_filesystem(target_dir: Path,
         print("Executing: " + command_str)
         print(command_str, file=cmdrelay)
         print("umount --lazy --read-only '" + str(target_dir) + "'", file=cmdrelay)
+        for chunk_dir in chunks_dirs:
+            print("umount --lazy --read-only '" + str(chunk_dir) + "'", file=cmdrelay)
         print("rm -rf '" + str(work_dir) + "/'*", file=cmdrelay)
     exit_code = namespace_proc.wait()
 
