@@ -59,7 +59,7 @@ jobs:
     concurrency:
       group: lockthreads
     steps:
-      - uses: dessant/lock-threads@v6.0.0
+      - uses: dessant/lock-threads@v6.0.2
         with:
           issue-inactive-days: '28'
           issue-comment: |
