@@ -14,8 +14,6 @@ from functools import reduce
 from tempfile import NamedTemporaryFile
 from math import sqrt, ceil
 
-from psutil import disk_partitions
-
 from code.mod import get_mod_mount_path
 from code.settings import InstanceSettings, ValidInstanceSettings, get_instance_settings
 from code.commandline import get_instance_path, get_pid_path
