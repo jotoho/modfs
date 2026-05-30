@@ -108,9 +108,9 @@ def run_in_filesystem(target_dir: Path,
         chunk_dir.mkdir(exist_ok=True)
         chunks_dirs += [chunk_dir]
     overlay_cmd_base = "mount --exclusive --onlyonce -t overlay overlay"
-    overlay_opts = "noauto,async,nodev,nosuid,noatime,exec,userxattr"
-    mount_cmd_rw = f"{overlay_cmd_base} -o '{overlay_opts},workdir={work_dir},upperdir={overflow_dir},lowerdir="
-    mount_cmd_ro = f"{overlay_cmd_base} --read-only -o '{overlay_opts},ro,lowerdir="
+    overlay_opts = "nodev,nosuid,noatime,userxattr"
+    mount_cmd_rw = f"{overlay_cmd_base} -o {overlay_opts} -o 'workdir={work_dir}' -o 'upperdir={overflow_dir}' -o 'lowerdir+="
+    mount_cmd_ro = f"{overlay_cmd_base} -o {overlay_opts},ro -o 'lowerdir+="
     print(f"Splitting {num_mods} mods into {ceil(num_mods / mods_per_chunk)} chunks of max size {mods_per_chunk}", file=stderr)
     namespace_proc = Popen([
         "unshare",
@@ -121,10 +121,11 @@ def run_in_filesystem(target_dir: Path,
     pid_path.write_text(str(namespace_proc.pid) + "\n")
     with namespace_proc.stdin as cmdrelay:
         print("set -euxo pipefail", file=cmdrelay)
+        lowerdir_concat_fn = lambda s1,s2: s1+"' -o lowerdir+='"+s2
         for chunk_dir in chunks_dirs:
-            print(mount_cmd_ro + reduce(lambda s1,s2: s1+":"+s2, links[:mods_per_chunk]) + "' '" + str(chunk_dir) + "'", file=cmdrelay)
+            print(mount_cmd_ro + reduce(lowerdir_concat_fn, links[:mods_per_chunk]) + "' '" + str(chunk_dir) + "'", file=cmdrelay)
             links = links[mods_per_chunk:]
-        print(mount_cmd_rw + reduce(lambda s1,s2: s1+":"+s2, map(lambda p: str(p), chunks_dirs)) + "' '" + str(target_dir) + "'", file=cmdrelay)
+        print(mount_cmd_rw + reduce(lowerdir_concat_fn, map(lambda p: str(p), chunks_dirs)) + "' '" + str(target_dir) + "'", file=cmdrelay)
         command_str = "'" + reduce(lambda s1,s2: s1+"' '"+s2, command) + "'"
         print("Executing: " + command_str)
         print(command_str, file=cmdrelay)
