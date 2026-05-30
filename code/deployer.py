@@ -67,51 +67,23 @@ def run_in_filesystem(target_dir: Path,
     if num_mods < 1:
         print("Error: Must have at least one source folder for deployment", file=stderr)
         exit(1)
-    mods_per_chunk = max(min(10, num_mods), ceil(sqrt(num_mods)))
-    #mods_per_chunk = min(3, num_mods)
-    search_distance = 1
-    while num_mods % mods_per_chunk == 1:
-        if num_mods % (mods_per_chunk - search_distance) != 1:
-            mods_per_chunk -= search_distance
-        elif num_mods % (mods_per_chunk + search_distance) != 1:
-            mods_per_chunk += search_distance
-        else:
-            search_distance += 1
     mod_dirs = []
     for mod in mods_to_deploy.keys():
         date, subversion = mods_to_deploy[mod]
         mod_dir = get_mod_mount_path(mod, date, subversion)
         if mod_dir.is_dir():
             mod_dirs = [str(mod_dir)] + mod_dirs
-    link_dir_base = get_instance_settings().get(ValidInstanceSettings.MOUNT_SYMLINKS_DIR)
-    links = []
-    link_dir_base.mkdir(exist_ok=True, parents=True)
-    clean_old_links(link_dir_base)
-    for mod_linkidx in range(num_mods):
-        link_dir = link_dir_base / str(mod_linkidx)
-        link_dir.symlink_to(mod_dirs[mod_linkidx], target_is_directory=True)
-        links += [str(link_dir)]
     overflow_dir = get_or_create_overflow_dir()
     work_dir = get_or_create_work_dir()
-    if not are_paths_on_same_filesystem(target_dir, work_dir):
-        print("work directory must be on the same filesystem as target", file=stderr)
+    if not are_paths_on_same_filesystem(overflow_dir, work_dir):
+        print("work directory must be on the same filesystem as overflow", file=stderr)
         exit(1)
-    print("Source directories:")
-    print(str(mod_dirs).replace(str(get_instance_path()), ".") + "\n", flush=True)
+    print("Source directories:", file=stderr)
+    pp(list(map(lambda s: str(s).replace(str(get_instance_path()), "."), mod_dirs)), stream=stderr)
     pid_path = get_pid_path()
     pid_path.touch(exist_ok=True)
-    chunks_basedir = get_instance_settings().get(ValidInstanceSettings.MOUNT_CHUNKS_DIR)
-    chunks_basedir.mkdir(exist_ok=True, parents=True)
-    chunks_dirs = []
-    for chunk_num in range(ceil(num_mods / mods_per_chunk)):
-        chunk_dir = chunks_basedir / str(chunk_num)
-        chunk_dir.mkdir(exist_ok=True)
-        chunks_dirs += [chunk_dir]
-    overlay_cmd_base = "mount --exclusive --onlyonce -t overlay overlay"
-    overlay_opts = "nodev,nosuid,noatime,userxattr"
-    mount_cmd_rw = f"{overlay_cmd_base} -o {overlay_opts} -o 'workdir={work_dir}' -o 'upperdir={overflow_dir}' -o 'lowerdir+="
-    mount_cmd_ro = f"{overlay_cmd_base} -o {overlay_opts},ro -o 'lowerdir+="
-    print(f"Splitting {num_mods} mods into {ceil(num_mods / mods_per_chunk)} chunks of max size {mods_per_chunk}", file=stderr)
+    mount_cmd = f"mount --exclusive --onlyonce -t overlay overlay -o nodev,nosuid,noatime,userxattr -o 'workdir={work_dir}' -o 'upperdir={overflow_dir}' -o 'lowerdir+="
+    print(f"Mounting {num_mods} sources for overlay...", file=stderr)
     namespace_proc = Popen([
         "unshare",
         "--user",
@@ -120,22 +92,16 @@ def run_in_filesystem(target_dir: Path,
     ], stdin=PIPE, text=True)
     pid_path.write_text(str(namespace_proc.pid) + "\n")
     with namespace_proc.stdin as cmdrelay:
-        print("set -euxo pipefail", file=cmdrelay)
+        print("set -euo pipefail", file=cmdrelay)
         lowerdir_concat_fn = lambda s1,s2: s1+"' -o lowerdir+='"+s2
-        for chunk_dir in chunks_dirs:
-            print(mount_cmd_ro + reduce(lowerdir_concat_fn, links[:mods_per_chunk]) + "' '" + str(chunk_dir) + "'", file=cmdrelay)
-            links = links[mods_per_chunk:]
-        print(mount_cmd_rw + reduce(lowerdir_concat_fn, map(lambda p: str(p), chunks_dirs)) + "' '" + str(target_dir) + "'", file=cmdrelay)
+        print(mount_cmd + reduce(lowerdir_concat_fn, map(lambda p: str(p), mod_dirs)) + "' '" + str(target_dir) + "'", file=cmdrelay)
         command_str = "'" + reduce(lambda s1,s2: s1+"' '"+s2, command) + "'"
-        print("Executing: " + command_str)
+        print("Executing: " + command_str, file=stderr)
         print(command_str, file=cmdrelay)
         print("umount --lazy --read-only '" + str(target_dir) + "'", file=cmdrelay)
-        for chunk_dir in chunks_dirs:
-            print("umount --lazy --read-only '" + str(chunk_dir) + "'", file=cmdrelay)
         print("rm -rf '" + str(work_dir) + "/'*", file=cmdrelay)
     exit_code = namespace_proc.wait()
 
-    clean_old_links(link_dir_base)
-
-    print("Exiting with code " + str(exit_code), file=stderr, flush=True)
+    if exit_code != 0:
+        print("Exiting with code " + str(exit_code), file=stderr)
     exit(exit_code)

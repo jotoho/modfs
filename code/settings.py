@@ -92,14 +92,6 @@ class ValidInstanceSettings(Enum):
                                       int,
                                       30,
                                       [lambda i: i >= 1 and i <= 3600])
-    MOUNT_SYMLINKS_DIR = ("mountLinksDir",
-                          Path,
-                          get_instance_path() / 'links',
-                          [])
-    MOUNT_CHUNKS_DIR = ("mountChunksDir",
-                        Path,
-                        get_instance_path() / 'chunks',
-                        [])
 
 
 class InstanceSettings:
