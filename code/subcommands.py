@@ -293,6 +293,9 @@ def subcommand_import(args: SubcommandArgDict) -> None:
     if link is not None:
         cfg.set(ValidModSettings.HYPERLINK, link)
 
+    if not cfg.get(ValidModSettings.ENABLED):
+        print("WARNING: Imported mod is currently disabled.", file=stderr)
+
 
 def subcommand_repair(args: SubcommandArgDict) -> None:
     """
