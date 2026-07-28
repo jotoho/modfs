@@ -539,13 +539,14 @@ def subcommand_delete(args: SubcommandArgDict) -> None:
     :param args:
     :type args:
     """
-    mod_id: str = args["mod_id"]
-    mod_dir: Path = args["instance"] / 'mods' / mod_id
-    if mod_dir.is_dir():
-        from shutil import rmtree
-        rmtree(mod_dir)
-    mod_conf: Path = args["instance"] / 'mods' / f"{mod_id}.json"
-    mod_conf.unlink(missing_ok=True)
+    modids: str = args["modids"]
+    for mod_id in modids:
+        mod_dir: Path = args["instance"] / 'mods' / mod_id
+        if mod_dir.is_dir():
+            from shutil import rmtree
+            rmtree(mod_dir)
+        mod_conf: Path = args["instance"] / 'mods' / f"{mod_id}.json"
+        mod_conf.unlink(missing_ok=True)
 
 
 def subcommand_enable(args: SubcommandArgDict) -> None:
